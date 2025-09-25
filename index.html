@@ -3,8 +3,12 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Wine Tasting Log</title>
+    <title>Wine Log</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="css/styles.css" />
 </head>
 
@@ -16,26 +20,44 @@
     </div>
 
     <header class="topbar">
-        <h1>Wine Tasting Log</h1>
+        <h1>Wine Log</h1>
+
+        <!-- Global search (3) -->
+        <div class="topbar-search">
+            <input id="globalSearch" type="search" placeholder="Search name or notes…" aria-label="Global search" />
+        </div>
+
         <div class="topbar-actions">
-            <button id="toggleTheme" class="ghost">🌙</button>
-            <button id="exportCSV" class="ghost">Export CSV</button>
-            <button id="exportJSON" class="ghost">Export JSON</button>
-            <label class="file-btn ghost">
-                Import JSON
-                <input type="file" id="importJSON" accept="application/json" />
-            </label>
+            <!-- (1) New Entry split button -->
+            <div class="split">
+                <button id="newEntryMain" class="primary">+ New Entry</button>
+                <button id="newEntryMenuBtn" class="caret" aria-haspopup="true" aria-expanded="false">▾</button>
+                <div id="newEntryMenu" class="menu" role="menu" aria-hidden="true">
+                    <button class="menuitem" data-newtype="white" role="menuitem">New White</button>
+                    <button class="menuitem" data-newtype="red" role="menuitem">New Red</button>
+                </div>
+            </div>
+
+            <!-- Theme toggle -->
+            <button id="toggleTheme" class="ghost" aria-label="Toggle theme">🌙</button>
         </div>
     </header>
 
-    <nav class="tabs">
-        <button class="tab active" data-tab="whiteForm">White</button>
-        <button class="tab" data-tab="redForm">Red</button>
-        <button class="tab" data-tab="logsView">Logs</button>
+    <!-- Tabs with count badges (2) -->
+    <nav class="tabs" role="tablist">
+        <button class="tab active" data-tab="whiteForm" role="tab" aria-selected="true">
+            White <span class="badge" id="countWhite">0</span>
+        </button>
+        <button class="tab" data-tab="redForm" role="tab" aria-selected="false">
+            Red <span class="badge" id="countRed">0</span>
+        </button>
+        <button class="tab" data-tab="logsView" role="tab" aria-selected="false">
+            Logs <span class="badge" id="countAll">0</span>
+        </button>
     </nav>
 
     <!-- WHITE WINE FORM -->
-    <section id="whiteForm" class="tabpanel active">
+    <section id="whiteForm" class="tabpanel active" role="tabpanel" aria-labelledby="tab-white">
         <form id="formWhite" class="card">
             <h2>White Wine Tasting Sheet</h2>
 
@@ -45,144 +67,165 @@
                     <input type="text" name="name" required />
                 </label>
 
-                <fieldset class="full">
-                    <legend>Apperance clarity</legend>
-                    <label><input type="radio" name="appearance_clarity" value="clear" required /> clear</label>
-                    <label><input type="radio" name="appearance_clarity" value="cloudy" /> cloudy</label>
+                <!-- APPEARANCE group -->
+                <fieldset class="group full">
+                    <legend class="group-title">APPEARANCE</legend>
+                    <div class="group-grid">
+                        <fieldset>
+                            <legend>Appearance clarity</legend>
+                            <label><input type="radio" name="appearance_clarity" value="clear" required /> clear</label>
+                            <label><input type="radio" name="appearance_clarity" value="cloudy" /> cloudy</label>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>Hue density</legend>
+                            <label><input type="radio" name="hue_density" value="pale" required /> pale</label>
+                            <label><input type="radio" name="hue_density" value="medium" /> medium</label>
+                            <label><input type="radio" name="hue_density" value="dark" /> dark</label>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>Hue</legend>
+                            <label><input type="radio" name="hue" value="greenish" required /> greenish</label>
+                            <label><input type="radio" name="hue" value="straw" /> straw</label>
+                            <label><input type="radio" name="hue" value="yellow" /> yellow</label>
+                            <label><input type="radio" name="hue" value="deep yellow" /> deep yellow</label>
+                        </fieldset>
+                    </div>
                 </fieldset>
 
-                <fieldset>
-                    <legend>hue density</legend>
-                    <label><input type="radio" name="hue_density" value="pale" required /> pale</label>
-                    <label><input type="radio" name="hue_density" value="medium" /> medium</label>
-                    <label><input type="radio" name="hue_density" value="dark" /> dark</label>
+                <!-- NOSE group -->
+                <fieldset class="group full">
+                    <legend class="group-title">NOSE</legend>
+                    <div class="group-grid">
+                        <fieldset class="full">
+                            <legend>Smell intensity</legend>
+                            <label><input type="radio" name="smell_intensity" value="non-aromatic" required />
+                                non-aromatic</label>
+                            <label><input type="radio" name="smell_intensity" value="semi-aromatic" />
+                                semi-aromatic</label>
+                            <label><input type="radio" name="smell_intensity" value="aromatic" /> aromatic</label>
+                        </fieldset>
+
+                        <fieldset class="full">
+                            <legend>Smell descriptors: fresh fruit</legend>
+                            <label><input type="checkbox" name="smell_fresh" value="citrus" /> citrus</label>
+                            <label><input type="checkbox" name="smell_fresh" value="apple" /> apple</label>
+                            <label><input type="checkbox" name="smell_fresh" value="melon" /> melon</label>
+                            <label><input type="checkbox" name="smell_fresh" value="peach" /> peach</label>
+                            <label><input type="checkbox" name="smell_fresh" value="pear" /> pear</label>
+                        </fieldset>
+
+                        <fieldset class="full">
+                            <legend>Smell descriptors (other)</legend>
+                            <label><input type="checkbox" name="smell_other" value="dried fruit" /> dried fruit</label>
+                            <label><input type="checkbox" name="smell_other" value="mineral" /> mineral</label>
+                            <label><input type="checkbox" name="smell_other" value="vegetal" /> vegetal</label>
+                            <label><input type="checkbox" name="smell_other" value="herbal" /> herbal</label>
+                            <label><input type="checkbox" name="smell_other" value="earth" /> earth</label>
+                            <label><input type="checkbox" name="smell_other" value="toast" /> toast</label>
+                            <label><input type="checkbox" name="smell_other" value="vanilla" /> vanilla</label>
+                            <label><input type="checkbox" name="smell_other" value="oak" /> oak</label>
+                            <label><input type="checkbox" name="smell_other" value="spice" /> spice</label>
+                            <label class="grow">
+                                other:
+                                <input type="text" name="smell_other_text" placeholder="type…" />
+                            </label>
+                        </fieldset>
+                    </div>
                 </fieldset>
 
-                <fieldset>
-                    <legend>hue</legend>
-                    <label><input type="radio" name="hue" value="greenish" required /> greenish</label>
-                    <label><input type="radio" name="hue" value="straw" /> straw</label>
-                    <label><input type="radio" name="hue" value="yellow" /> yellow</label>
-                    <label><input type="radio" name="hue" value="deep yellow" /> deep yellow</label>
-                </fieldset>
+                <!-- PALATE group -->
+                <fieldset class="group full">
+                    <legend class="group-title">PALATE</legend>
+                    <div class="group-grid">
+                        <fieldset>
+                            <legend>Sweetness</legend>
+                            <label><input type="radio" name="sweetness" value="dry" required /> dry</label>
+                            <label><input type="radio" name="sweetness" value="medium" /> medium</label>
+                            <label><input type="radio" name="sweetness" value="sweet" /> sweet</label>
+                        </fieldset>
 
-                <fieldset class="full">
-                    <legend>goose smell intensity</legend>
-                    <label><input type="radio" name="smell_intensity" value="non-aromatic" required />
-                        non-aromatic</label>
-                    <label><input type="radio" name="smell_intensity" value="semi-aromatic" /> semi-aromatic</label>
-                    <label><input type="radio" name="smell_intensity" value="armatic" /> armatic</label>
-                </fieldset>
+                        <fieldset>
+                            <legend>Sourness</legend>
+                            <label><input type="radio" name="sourness" value="not sour" required /> not sour</label>
+                            <label><input type="radio" name="sourness" value="slightly sour" /> slightly sour</label>
+                            <label><input type="radio" name="sourness" value="sour" /> sour</label>
+                            <label><input type="radio" name="sourness" value="very sour" /> very sour</label>
+                        </fieldset>
 
-                <fieldset class="full">
-                    <legend>smell descriptors: fresh fruit</legend>
-                    <label><input type="checkbox" name="smell_fresh" value="citrus" /> citrus</label>
-                    <label><input type="checkbox" name="smell_fresh" value="apple" /> apple</label>
-                    <label><input type="checkbox" name="smell_fresh" value="melon" /> melon</label>
-                    <label><input type="checkbox" name="smell_fresh" value="peach" /> peach</label>
-                    <label><input type="checkbox" name="smell_fresh" value="pear" /> pear</label>
-                </fieldset>
+                        <fieldset>
+                            <legend>Bitterness</legend>
+                            <label><input type="radio" name="bitterness" value="not bitter" required /> not
+                                bitter</label>
+                            <label><input type="radio" name="bitterness" value="slightly bitter" /> slightly
+                                bitter</label>
+                            <label><input type="radio" name="bitterness" value="bitter" /> bitter</label>
+                            <label><input type="radio" name="bitterness" value="very bitter" /> very bitter</label>
+                        </fieldset>
 
-                <fieldset class="full">
-                    <legend>smell descriptors (other)</legend>
-                    <label><input type="checkbox" name="smell_other" value="dried fruit" /> dried fruit</label>
-                    <label><input type="checkbox" name="smell_other" value="mineral" /> mineral</label>
-                    <label><input type="checkbox" name="smell_other" value="vegetal" /> vegetal</label>
-                    <label><input type="checkbox" name="smell_other" value="herbal" /> herbal</label>
-                    <label><input type="checkbox" name="smell_other" value="earth" /> earth</label>
-                    <label><input type="checkbox" name="smell_other" value="toast" /> toast</label>
-                    <label><input type="checkbox" name="smell_other" value="vanilla" /> vanilla</label>
-                    <label><input type="checkbox" name="smell_other" value="oak" /> oak</label>
-                    <label><input type="checkbox" name="smell_other" value="spice" /> spice</label>
-                    <label class="grow">
-                        other:
-                        <input type="text" name="smell_other_text" placeholder="type…" />
-                    </label>
-                </fieldset>
+                        <fieldset>
+                            <legend>Astringency</legend>
+                            <label><input type="radio" name="astringency" value="not astringent" required /> not
+                                astringent</label>
+                            <label><input type="radio" name="astringency" value="slightly astringent" /> slightly
+                                astringent</label>
+                            <label><input type="radio" name="astringency" value="astringent" /> astringent</label>
+                        </fieldset>
 
-                <fieldset>
-                    <legend>palate sweetness</legend>
-                    <label><input type="radio" name="sweetness" value="dry" required /> dry</label>
-                    <label><input type="radio" name="sweetness" value="medium" /> medium</label>
-                    <label><input type="radio" name="sweetness" value="sweet" /> sweet</label>
-                </fieldset>
+                        <fieldset class="full">
+                            <legend>Descriptors on the palate & finish — fresh fruit</legend>
+                            <label><input type="checkbox" name="palate_fresh" value="citrus" /> citrus</label>
+                            <label><input type="checkbox" name="palate_fresh" value="apple" /> apple</label>
+                            <label><input type="checkbox" name="palate_fresh" value="melon" /> melon</label>
+                            <label><input type="checkbox" name="palate_fresh" value="peach" /> peach</label>
+                            <label><input type="checkbox" name="palate_fresh" value="pear" /> pear</label>
+                        </fieldset>
 
-                <fieldset>
-                    <legend>sourness</legend>
-                    <label><input type="radio" name="sourness" value="not sour" required /> not sour</label>
-                    <label><input type="radio" name="sourness" value="slightly sour" /> slightly sour</label>
-                    <label><input type="radio" name="sourness" value="sour" /> sour</label>
-                    <label><input type="radio" name="sourness" value="very sour" /> very sour</label>
-                </fieldset>
+                        <fieldset class="full">
+                            <legend>Descriptors on the palate & finish (other)</legend>
+                            <label><input type="checkbox" name="palate_other" value="dried fruit" /> dried fruit</label>
+                            <label><input type="checkbox" name="palate_other" value="mineral" /> mineral</label>
+                            <label><input type="checkbox" name="palate_other" value="vegetal" /> vegetal</label>
+                            <label><input type="checkbox" name="palate_other" value="herbal" /> herbal</label>
+                            <label><input type="checkbox" name="palate_other" value="earth" /> earth</label>
+                            <label><input type="checkbox" name="palate_other" value="toast" /> toast</label>
+                            <label><input type="checkbox" name="palate_other" value="vanilla" /> vanilla</label>
+                            <label><input type="checkbox" name="palate_other" value="oak" /> oak</label>
+                            <label><input type="checkbox" name="palate_other" value="spice" /> spice</label>
+                            <label class="grow">
+                                other:
+                                <input type="text" name="palate_other_text" placeholder="type…" />
+                            </label>
+                        </fieldset>
 
-                <fieldset>
-                    <legend>bitterness</legend>
-                    <label><input type="radio" name="bitterness" value="not bitter" required /> not bitter</label>
-                    <label><input type="radio" name="bitterness" value="slightly bitter" /> slightly bitter</label>
-                    <label><input type="radio" name="bitterness" value="bitter" /> bitter</label>
-                    <label><input type="radio" name="bitterness" value="very bitter" /> very bitter</label>
-                </fieldset>
+                        <fieldset>
+                            <legend>Body</legend>
+                            <label><input type="radio" name="body" value="light" required /> light</label>
+                            <label><input type="radio" name="body" value="medium" /> medium</label>
+                            <label><input type="radio" name="body" value="full" /> full</label>
+                        </fieldset>
 
-                <fieldset>
-                    <legend>astringency</legend>
-                    <label><input type="radio" name="astringency" value="not astringent" required /> not
-                        astringent</label>
-                    <label><input type="radio" name="astringency" value="slightly astringent" /> slightly
-                        astringent</label>
-                    <label><input type="radio" name="astringency" value="astringent" /> astringent</label>
-                </fieldset>
+                        <fieldset>
+                            <legend>Texture</legend>
+                            <label><input type="radio" name="texture" value="smooth" required /> smooth</label>
+                            <label><input type="radio" name="texture" value="tactile" /> tactile</label>
+                            <label><input type="radio" name="texture" value="coarse" /> coarse</label>
+                        </fieldset>
 
-                <fieldset class="full">
-                    <legend>smell descriptors on the palate and in the finish — fresh fruit</legend>
-                    <label><input type="checkbox" name="palate_fresh" value="citrus" /> citrus</label>
-                    <label><input type="checkbox" name="palate_fresh" value="apple" /> apple</label>
-                    <label><input type="checkbox" name="palate_fresh" value="melon" /> melon</label>
-                    <label><input type="checkbox" name="palate_fresh" value="peach" /> peach</label>
-                    <label><input type="checkbox" name="palate_fresh" value="pear" /> pear</label>
-                </fieldset>
+                        <fieldset>
+                            <legend>Balance</legend>
+                            <label><input type="radio" name="balance" value="unbalanced" required /> unbalanced</label>
+                            <label><input type="radio" name="balance" value="balanced" /> balanced</label>
+                        </fieldset>
 
-                <fieldset class="full">
-                    <legend>smell descriptors on the palate and in the finish (other)</legend>
-                    <label><input type="checkbox" name="palate_other" value="dried fruit" /> dried fruit</label>
-                    <label><input type="checkbox" name="palate_other" value="mineral" /> mineral</label>
-                    <label><input type="checkbox" name="palate_other" value="vegetal" /> vegetal</label>
-                    <label><input type="checkbox" name="palate_other" value="herbal" /> herbal</label>
-                    <label><input type="checkbox" name="palate_other" value="earth" /> earth</label>
-                    <label><input type="checkbox" name="palate_other" value="toast" /> toast</label>
-                    <label><input type="checkbox" name="palate_other" value="vanilla" /> vanilla</label>
-                    <label><input type="checkbox" name="palate_other" value="oak" /> oak</label>
-                    <label><input type="checkbox" name="palate_other" value="spice" /> spice</label>
-                    <label class="grow">
-                        other:
-                        <input type="text" name="palate_other_text" placeholder="type…" />
-                    </label>
-                </fieldset>
-
-                <fieldset>
-                    <legend>body</legend>
-                    <label><input type="radio" name="body" value="light" required /> light</label>
-                    <label><input type="radio" name="body" value="medium" /> medium</label>
-                    <label><input type="radio" name="body" value="full" /> full</label>
-                </fieldset>
-
-                <fieldset>
-                    <legend>texture</legend>
-                    <label><input type="radio" name="texture" value="smooth" required /> smooth</label>
-                    <label><input type="radio" name="texture" value="tactile" /> tactile</label>
-                    <label><input type="radio" name="texture" value="coarse" /> coarse</label>
-                </fieldset>
-
-                <fieldset>
-                    <legend>balance</legend>
-                    <label><input type="radio" name="balance" value="unbalanced" required /> unbalanced</label>
-                    <label><input type="radio" name="balance" value="balanced" /> balanced</label>
-                </fieldset>
-
-                <fieldset>
-                    <legend>finish</legend>
-                    <label><input type="radio" name="finish" value="short" required /> short</label>
-                    <label><input type="radio" name="finish" value="medium" /> medium</label>
-                    <label><input type="radio" name="finish" value="long" /> long</label>
+                        <fieldset>
+                            <legend>Finish</legend>
+                            <label><input type="radio" name="finish" value="short" required /> short</label>
+                            <label><input type="radio" name="finish" value="medium" /> medium</label>
+                            <label><input type="radio" name="finish" value="long" /> long</label>
+                        </fieldset>
+                    </div>
                 </fieldset>
 
                 <label class="full">
@@ -204,7 +247,7 @@
     </section>
 
     <!-- RED WINE FORM -->
-    <section id="redForm" class="tabpanel">
+    <section id="redForm" class="tabpanel" role="tabpanel" aria-labelledby="tab-red">
         <form id="formRed" class="card">
             <h2>Red Wine Tasting Sheet</h2>
 
@@ -214,149 +257,173 @@
                     <input type="text" name="name" required />
                 </label>
 
-                <!-- Shares 'Apperance clarity' and 'hue density' with white -->
-                <fieldset class="full">
-                    <legend>Apperance clarity</legend>
-                    <label><input type="radio" name="appearance_clarity" value="clear" required /> clear</label>
-                    <label><input type="radio" name="appearance_clarity" value="cloudy" /> cloudy</label>
+                <!-- APPEARANCE group -->
+                <fieldset class="group full">
+                    <legend class="group-title">APPEARANCE</legend>
+                    <div class="group-grid">
+                        <fieldset class="full">
+                            <legend>Appearance clarity</legend>
+                            <label><input type="radio" name="appearance_clarity" value="clear" required /> clear</label>
+                            <label><input type="radio" name="appearance_clarity" value="cloudy" /> cloudy</label>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>Hue density</legend>
+                            <label><input type="radio" name="hue_density" value="pale" required /> pale</label>
+                            <label><input type="radio" name="hue_density" value="medium" /> medium</label>
+                            <label><input type="radio" name="hue_density" value="dark" /> dark</label>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>Hue</legend>
+                            <label><input type="radio" name="hue" value="purple" required /> purple</label>
+                            <label><input type="radio" name="hue" value="ruby" /> ruby</label>
+                            <label><input type="radio" name="hue" value="garnet" /> garnet</label>
+                            <label><input type="radio" name="hue" value="brown" /> brown</label>
+                        </fieldset>
+                    </div>
                 </fieldset>
 
-                <fieldset>
-                    <legend>hue density</legend>
-                    <label><input type="radio" name="hue_density" value="pale" required /> pale</label>
-                    <label><input type="radio" name="hue_density" value="medium" /> medium</label>
-                    <label><input type="radio" name="hue_density" value="dark" /> dark</label>
+                <!-- NOSE group -->
+                <fieldset class="group full">
+                    <legend class="group-title">NOSE</legend>
+                    <div class="group-grid">
+                        <fieldset class="full">
+                            <legend>Smell intensity</legend>
+                            <label><input type="radio" name="smell_intensity" value="non-aromatic" required />
+                                non-aromatic</label>
+                            <label><input type="radio" name="smell_intensity" value="semi-aromatic" />
+                                semi-aromatic</label>
+                            <label><input type="radio" name="smell_intensity" value="aromatic" /> aromatic</label>
+                        </fieldset>
+
+                        <fieldset class="full">
+                            <legend>Smell descriptors: fruit</legend>
+                            <label><input type="checkbox" name="smell_fruit_red" value="cherry" /> cherry</label>
+                            <label><input type="checkbox" name="smell_fruit_red" value="strawberry" />
+                                strawberry</label>
+                            <label><input type="checkbox" name="smell_fruit_red" value="plum" /> plum</label>
+                            <label><input type="checkbox" name="smell_fruit_red" value="raspberry" /> raspberry</label>
+                            <label><input type="checkbox" name="smell_fruit_red" value="blackberry" />
+                                blackberry</label>
+                            <label><input type="checkbox" name="smell_fruit_red" value="black currant" /> black
+                                currant</label>
+                        </fieldset>
+
+                        <fieldset class="full">
+                            <legend>Smell descriptors (other)</legend>
+                            <label><input type="checkbox" name="smell_other" value="dried fruit" /> dried fruit</label>
+                            <label><input type="checkbox" name="smell_other" value="mineral" /> mineral</label>
+                            <label><input type="checkbox" name="smell_other" value="vegetal" /> vegetal</label>
+                            <label><input type="checkbox" name="smell_other" value="herbal" /> herbal</label>
+                            <label><input type="checkbox" name="smell_other" value="earth" /> earth</label>
+                            <label><input type="checkbox" name="smell_other" value="toast" /> toast</label>
+                            <label><input type="checkbox" name="smell_other" value="vanilla" /> vanilla</label>
+                            <label><input type="checkbox" name="smell_other" value="oak" /> oak</label>
+                            <label><input type="checkbox" name="smell_other" value="spice" /> spice</label>
+                            <label class="grow">
+                                other:
+                                <input type="text" name="smell_other_text" placeholder="type…" />
+                            </label>
+                        </fieldset>
+                    </div>
                 </fieldset>
 
-                <!-- RED hue options differ -->
-                <fieldset>
-                    <legend>hue</legend>
-                    <label><input type="radio" name="hue" value="purple" required /> purple</label>
-                    <label><input type="radio" name="hue" value="ruby" /> ruby</label>
-                    <label><input type="radio" name="hue" value="garnet" /> garnet</label>
-                    <label><input type="radio" name="hue" value="brown" /> brown</label>
-                </fieldset>
+                <!-- PALATE group -->
+                <fieldset class="group full">
+                    <legend class="group-title">PALATE</legend>
+                    <div class="group-grid">
+                        <fieldset>
+                            <legend>Sweetness</legend>
+                            <label><input type="radio" name="sweetness" value="dry" required /> dry</label>
+                            <label><input type="radio" name="sweetness" value="slightly sweet" /> slightly sweet</label>
+                            <label><input type="radio" name="sweetness" value="sweet" /> sweet</label>
+                            <label><input type="radio" name="sweetness" value="very sweet" /> very sweet</label>
+                        </fieldset>
 
-                <fieldset class="full">
-                    <legend>goose smell intensity</legend>
-                    <label><input type="radio" name="smell_intensity" value="non-aromatic" required />
-                        non-aromatic</label>
-                    <label><input type="radio" name="smell_intensity" value="semi-aromatic" /> semi-aromatic</label>
-                    <label><input type="radio" name="smell_intensity" value="armatic" /> armatic</label>
-                </fieldset>
+                        <fieldset>
+                            <legend>Sourness</legend>
+                            <label><input type="radio" name="sourness" value="not sour" required /> not sour</label>
+                            <label><input type="radio" name="sourness" value="slightly sour" /> slightly sour</label>
+                            <label><input type="radio" name="sourness" value="sour" /> sour</label>
+                            <label><input type="radio" name="sourness" value="very sour" /> very sour</label>
+                        </fieldset>
 
-                <!-- RED smell descriptors differ -->
-                <fieldset class="full">
-                    <legend>smell descriptors: fruit</legend>
-                    <label><input type="checkbox" name="smell_fruit_red" value="cherry" /> cherry</label>
-                    <label><input type="checkbox" name="smell_fruit_red" value="strawberry" /> strawberry</label>
-                    <label><input type="checkbox" name="smell_fruit_red" value="plum" /> plum</label>
-                    <label><input type="checkbox" name="smell_fruit_red" value="raspberry" /> raspberry</label>
-                    <label><input type="checkbox" name="smell_fruit_red" value="blackberry" /> blackberry</label>
-                    <label><input type="checkbox" name="smell_fruit_red" value="black currant" /> black currant</label>
-                </fieldset>
+                        <fieldset>
+                            <legend>Bitterness</legend>
+                            <label><input type="radio" name="bitterness" value="not bitter" required /> not
+                                bitter</label>
+                            <label><input type="radio" name="bitterness" value="slightly bitter" /> slightly
+                                bitter</label>
+                            <label><input type="radio" name="bitterness" value="bitter" /> bitter</label>
+                        </fieldset>
 
-                <fieldset class="full">
-                    <legend>smell descriptors (other)</legend>
-                    <label><input type="checkbox" name="smell_other" value="dried fruit" /> dried fruit</label>
-                    <label><input type="checkbox" name="smell_other" value="mineral" /> mineral</label>
-                    <label><input type="checkbox" name="smell_other" value="vegetal" /> vegetal</label>
-                    <label><input type="checkbox" name="smell_other" value="herbal" /> herbal</label>
-                    <label><input type="checkbox" name="smell_other" value="earth" /> earth</label>
-                    <label><input type="checkbox" name="smell_other" value="toast" /> toast</label>
-                    <label><input type="checkbox" name="smell_other" value="vanilla" /> vanilla</label>
-                    <label><input type="checkbox" name="smell_other" value="oak" /> oak</label>
-                    <label><input type="checkbox" name="smell_other" value="spice" /> spice</label>
-                    <label class="grow">
-                        other:
-                        <input type="text" name="smell_other_text" placeholder="type…" />
-                    </label>
-                </fieldset>
+                        <fieldset>
+                            <legend>Astringency</legend>
+                            <label><input type="radio" name="astringency" value="not astringent" required /> not
+                                astringent</label>
+                            <label><input type="radio" name="astringency" value="slightly astringent" /> slightly
+                                astringent</label>
+                            <label><input type="radio" name="astringency" value="astringent" /> astringent</label>
+                        </fieldset>
 
-                <fieldset>
-                    <legend>sweetness</legend>
-                    <label><input type="radio" name="sweetness" value="dry" required /> dry</label>
-                    <label><input type="radio" name="sweetness" value="slightly sweet" /> slightly sweet</label>
-                    <label><input type="radio" name="sweetness" value="sweet" /> sweet</label>
-                    <label><input type="radio" name="sweetness" value="very sweet" /> very sweet</label>
-                </fieldset>
+                        <fieldset class="full">
+                            <legend>Descriptors on the palate & finish — fruit</legend>
+                            <label><input type="checkbox" name="palate_fruit_red" value="cherry" /> cherry</label>
+                            <label><input type="checkbox" name="palate_fruit_red" value="strawberry" />
+                                strawberry</label>
+                            <label><input type="checkbox" name="palate_fruit_red" value="plum" /> plum</label>
+                            <label><input type="checkbox" name="palate_fruit_red" value="raspberry" /> raspberry</label>
+                            <label><input type="checkbox" name="palate_fruit_red" value="blackberry" />
+                                blackberry</label>
+                            <label><input type="checkbox" name="palate_fruit_red" value="black currant" /> black
+                                currant</label>
+                        </fieldset>
 
-                <fieldset>
-                    <legend>sourness</legend>
-                    <label><input type="radio" name="sourness" value="not sour" required /> not sour</label>
-                    <label><input type="radio" name="sourness" value="slightly sour" /> slightly sour</label>
-                    <label><input type="radio" name="sourness" value="sour" /> sour</label>
-                    <label><input type="radio" name="sourness" value="very sour" /> very sour</label>
-                </fieldset>
+                        <fieldset class="full">
+                            <legend>Descriptors on the palate & finish (other)</legend>
+                            <label><input type="checkbox" name="palate_other" value="dried fruit" /> dried fruit</label>
+                            <label><input type="checkbox" name="palate_other" value="mineral" /> mineral</label>
+                            <label><input type="checkbox" name="palate_other" value="vegetal" /> vegetal</label>
+                            <label><input type="checkbox" name="palate_other" value="herbal" /> herbal</label>
+                            <label><input type="checkbox" name="palate_other" value="earth" /> earth</label>
+                            <label><input type="checkbox" name="palate_other" value="toast" /> toast</label>
+                            <label><input type="checkbox" name="palate_other" value="vanilla" /> vanilla</label>
+                            <label><input type="checkbox" name="palate_other" value="oak" /> oak</label>
+                            <label><input type="checkbox" name="palate_other" value="spice" /> spice</label>
+                            <label class="grow">
+                                other:
+                                <input type="text" name="palate_other_text" placeholder="type…" />
+                            </label>
+                        </fieldset>
 
-                <fieldset>
-                    <legend>bitterness</legend>
-                    <label><input type="radio" name="bitterness" value="not bitter" required /> not bitter</label>
-                    <label><input type="radio" name="bitterness" value="slightly bitter" /> slightly bitter</label>
-                    <label><input type="radio" name="bitterness" value="bitter" /> bitter</label>
-                </fieldset>
+                        <fieldset>
+                            <legend>Body</legend>
+                            <label><input type="radio" name="body" value="light" required /> light</label>
+                            <label><input type="radio" name="body" value="medium" /> medium</label>
+                            <label><input type="radio" name="body" value="full" /> full</label>
+                        </fieldset>
 
-                <fieldset>
-                    <legend>astringency</legend>
-                    <label><input type="radio" name="astringency" value="not astringent" required /> not
-                        astringent</label>
-                    <label><input type="radio" name="astringency" value="slightly astringent" /> slightly
-                        astringent</label>
-                    <label><input type="radio" name="astringency" value="astringent" /> astringent</label>
-                </fieldset>
+                        <fieldset>
+                            <legend>Texture</legend>
+                            <label><input type="radio" name="texture" value="smooth" required /> smooth</label>
+                            <label><input type="radio" name="texture" value="tactile" /> tactile</label>
+                            <label><input type="radio" name="texture" value="coarse" /> coarse</label>
+                        </fieldset>
 
-                <fieldset class="full">
-                    <legend>smell descriptors on the palate and in the finish — fruit</legend>
-                    <label><input type="checkbox" name="palate_fruit_red" value="cherry" /> cherry</label>
-                    <label><input type="checkbox" name="palate_fruit_red" value="strawberry" /> strawberry</label>
-                    <label><input type="checkbox" name="palate_fruit_red" value="plum" /> plum</label>
-                    <label><input type="checkbox" name="palate_fruit_red" value="raspberry" /> raspberry</label>
-                    <label><input type="checkbox" name="palate_fruit_red" value="blackberry" /> blackberry</label>
-                    <label><input type="checkbox" name="palate_fruit_red" value="black currant" /> black currant</label>
-                </fieldset>
+                        <fieldset>
+                            <legend>Balance</legend>
+                            <label><input type="radio" name="balance" value="unbalanced" required /> unbalanced</label>
+                            <label><input type="radio" name="balance" value="balanced" /> balanced</label>
+                        </fieldset>
 
-                <fieldset class="full">
-                    <legend>smell descriptors on the palate and in the finish (other)</legend>
-                    <label><input type="checkbox" name="palate_other" value="dried fruit" /> dried fruit</label>
-                    <label><input type="checkbox" name="palate_other" value="mineral" /> mineral</label>
-                    <label><input type="checkbox" name="palate_other" value="vegetal" /> vegetal</label>
-                    <label><input type="checkbox" name="palate_other" value="herbal" /> herbal</label>
-                    <label><input type="checkbox" name="palate_other" value="earth" /> earth</label>
-                    <label><input type="checkbox" name="palate_other" value="toast" /> toast</label>
-                    <label><input type="checkbox" name="palate_other" value="vanilla" /> vanilla</label>
-                    <label><input type="checkbox" name="palate_other" value="oak" /> oak</label>
-                    <label><input type="checkbox" name="palate_other" value="spice" /> spice</label>
-                    <label class="grow">
-                        other:
-                        <input type="text" name="palate_other_text" placeholder="type…" />
-                    </label>
-                </fieldset>
-
-                <fieldset>
-                    <legend>body</legend>
-                    <label><input type="radio" name="body" value="light" required /> light</label>
-                    <label><input type="radio" name="body" value="medium" /> medium</label>
-                    <label><input type="radio" name="body" value="full" /> full</label>
-                </fieldset>
-
-                <fieldset>
-                    <legend>texture</legend>
-                    <label><input type="radio" name="texture" value="smooth" required /> smooth</label>
-                    <label><input type="radio" name="texture" value="tactile" /> tactile</label>
-                    <label><input type="radio" name="texture" value="coarse" /> coarse</label>
-                </fieldset>
-
-                <fieldset>
-                    <legend>balance</legend>
-                    <label><input type="radio" name="balance" value="unbalanced" required /> unbalanced</label>
-                    <label><input type="radio" name="balance" value="balanced" /> balanced</label>
-                </fieldset>
-
-                <fieldset>
-                    <legend>finish</legend>
-                    <label><input type="radio" name="finish" value="short" required /> short</label>
-                    <label><input type="radio" name="finish" value="medium" /> medium</label>
-                    <label><input type="radio" name="finish" value="long" /> long</label>
+                        <fieldset>
+                            <legend>Finish</legend>
+                            <label><input type="radio" name="finish" value="short" required /> short</label>
+                            <label><input type="radio" name="finish" value="medium" /> medium</label>
+                            <label><input type="radio" name="finish" value="long" /> long</label>
+                        </fieldset>
+                    </div>
                 </fieldset>
 
                 <label class="full">
@@ -378,21 +445,28 @@
     </section>
 
     <!-- LOGS / REVIEW -->
-    <section id="logsView" class="tabpanel">
+    <section id="logsView" class="tabpanel" role="tabpanel" aria-labelledby="tab-logs">
         <div class="card">
             <h2>All Logs</h2>
+
+            <!-- (4) Filter chips -->
             <div class="toolbar">
-                <input id="search" type="search" placeholder="Search by name or notes…" />
-                <select id="filterType">
-                    <option value="">All types</option>
-                    <option value="white">White</option>
-                    <option value="red">Red</option>
-                </select>
+                <div class="chips" id="typeChips" role="group" aria-label="Type filter">
+                    <button class="chip selected" data-type="">All</button>
+                    <button class="chip" data-type="white">White</button>
+                    <button class="chip" data-type="red">Red</button>
+                </div>
+
+                <!-- local search still here for refinement -->
+                <input id="search" type="search" placeholder="Search within logs…" />
+                <div class="spacer"></div>
                 <button id="clearAll" class="danger">Delete All</button>
             </div>
+
             <ul id="logList" class="list"></ul>
         </div>
 
+        <!-- Inline detail still uses dialog when needed -->
         <dialog id="detailDialog">
             <article id="detailContent"></article>
             <footer class="dialog-actions">
@@ -402,6 +476,37 @@
             </footer>
         </dialog>
     </section>
+
+    <!-- (8) Quick Add dialog (also used by mobile FAB) -->
+    <dialog id="quickAddDialog">
+        <form id="quickAddForm" method="dialog" class="card quickadd">
+            <h3>Quick Add</h3>
+            <label>
+                Name
+                <input type="text" name="name" placeholder="e.g., 2021 Chablis..." required />
+            </label>
+            <div class="row">
+                <label class="selectlike">
+                    Type
+                    <select name="type">
+                        <option value="white" selected>White</option>
+                        <option value="red">Red</option>
+                    </select>
+                </label>
+                <label>
+                    Photo (optional)
+                    <input type="file" name="photo" accept="image/*" />
+                </label>
+            </div>
+            <footer class="actions">
+                <button value="cancel" class="ghost">Cancel</button>
+                <button id="quickAddSave" class="primary">Save</button>
+            </footer>
+        </form>
+    </dialog>
+
+    <!-- (1/8) Mobile FAB for Quick Add -->
+    <button id="fabQuickAdd" class="fab" aria-label="Quick add">＋</button>
 
     <script src="js/script.js"></script>
 </body>
