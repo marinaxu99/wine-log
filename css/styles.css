@@ -705,6 +705,19 @@ f .img-preview {
     transform: translateY(-1px);
 }
 
+/* Make "other:" inputs span full width and stack vertically */
+label.other-input {
+    display: flex;
+    /* instead of inline-flex */
+    flex-direction: row;
+    /* stack label text above input */
+    align-items: flex-start;
+    margin-top: 12px;
+    /* consistent spacing */
+    align-items: center;
+    margin: 0 10rem 0 10rem;
+}
+
 /* responsive */
 @media (max-width: 900px) {
     .topbar {
