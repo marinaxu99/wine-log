@@ -1,9 +1,509 @@
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    padding: 50px;
+/* ============ THEME TOKENS ============ */
+:root {
+    /* base */
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --text: #101315;
+    --muted: #6b7280;
+    --border: #e7e9ee;
+
+    /* brand accents */
+    --primary: #5561f6;
+    /* refined indigo */
+    --primary-weak: color-mix(in oklab, var(--primary) 16%, white);
+    --danger: #ef4444;
+
+    /* depth & effects */
+    --shadow-1: 0 1px 2px rgba(16, 19, 21, .06), 0 6px 16px rgba(16, 19, 21, .06);
+    --shadow-2: 0 6px 16px rgba(16, 19, 21, .10), 0 2px 6px rgba(16, 19, 21, .06);
+    --radius: 14px;
+
+    /* focus */
+    --ring: 0 0 0 3px color-mix(in oklab, var(--primary) 24%, transparent);
+
+    /* typography */
+    --font-sans: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    --font-head: 'Nunito Sans', var(--font-sans);
+    --font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-h1 {
-    color: purple;
+:root.dark {
+    --bg: #0b0c0f;
+    --card: #121419;
+    --text: #e7eaf0;
+    --muted: #9aa3b2;
+    --border: #222630;
+    --primary: #7b87ff;
+    --primary-weak: color-mix(in oklab, var(--primary) 18%, #0b0c0f);
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, .25), 0 6px 16px rgba(0, 0, 0, .25);
+    --shadow-2: 0 10px 30px rgba(0, 0, 0, .35), 0 2px 6px rgba(0, 0, 0, .25);
+    --ring: 0 0 0 3px color-mix(in oklab, var(--primary) 34%, transparent);
+}
+
+/* ============ RESET / BASE ============ */
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font: 15px/1.6 var(--font-sans);
+    color: var(--text);
+    background: radial-gradient(1200px 800px at 120% -10%, #e8ebff 0%, transparent 50%),
+        radial-gradient(1000px 700px at -20% -20%, #ffe9f0 0%, transparent 48%),
+        var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* background blobs */
+.bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.blob {
+    position: absolute;
+    width: 42vmax;
+    height: 42vmax;
+    filter: blur(40px);
+    opacity: .28;
+    border-radius: 50%;
+    animation: float 28s ease-in-out infinite;
+    will-change: transform;
+}
+
+.blob-a {
+    left: -10vmax;
+    top: -6vmax;
+    background: radial-gradient(circle at 30% 30%, #c9d0ff, #8ea2ff);
+}
+
+.blob-b {
+    right: -8vmax;
+    bottom: -10vmax;
+    background: radial-gradient(circle at 60% 40%, #ffd1df, #ff9fb8);
+    animation-duration: 34s;
+}
+
+@keyframes float {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate3d(2vmax, -1vmax, 0) scale(1.06);
+    }
+
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+}
+
+/* prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    .blob {
+        animation: none;
+    }
+}
+
+/* ============ APP CHROME ============ */
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: color-mix(in oklab, var(--bg) 72%, #ffffff 28%);
+    backdrop-filter: saturate(1.2) blur(6px);
+    border-bottom: 1px solid var(--border);
+}
+
+.topbar h1 {
+    margin: 0;
+    font: 700 18px/1 var(--font-head);
+    letter-spacing: .2px;
+}
+
+.topbar-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.tabs {
+    position: sticky;
+    top: 58px;
+    z-index: 2;
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(0deg, color-mix(in oklab, var(--bg) 85%, #fff 15%), var(--bg));
+}
+
+.tab {
+    position: relative;
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--card) 86%, var(--primary-weak) 14%);
+    cursor: pointer;
+    color: var(--text);
+    transition: transform .12s ease, box-shadow .2s ease;
+}
+
+.tab:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-1);
+}
+
+.tab.active {
+    border-color: color-mix(in oklab, var(--primary) 60%, var(--border));
+    background: color-mix(in oklab, var(--card) 70%, var(--primary-weak) 30%);
+    box-shadow: var(--shadow-1);
+}
+
+.tabpanel {
+    display: none;
+    padding: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.tabpanel.active {
+    display: block;
+}
+
+/* ============ CARDS & LAYOUT ============ */
+.card {
+    background: color-mix(in oklab, var(--card) 92%, var(--primary-weak) 8%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: var(--shadow-1);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+    gap: 16px 20px;
+}
+
+.grid .full {
+    grid-column: 1 / -1;
+}
+
+.grid .grow {
+    flex: 1;
+    min-width: 160px;
+}
+
+fieldset {
+    border: 1px dashed color-mix(in oklab, var(--border) 70%, var(--primary-weak) 30%);
+    padding: 12px;
+    border-radius: 12px;
+    transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+fieldset:hover {
+    border-color: color-mix(in oklab, var(--border) 40%, var(--primary) 60%);
+    box-shadow: var(--shadow-1);
+}
+
+legend {
+    font: 600 13px/1 var(--font-head);
+    color: var(--muted);
+    letter-spacing: .3px;
+    padding: 0 6px;
+}
+
+/* labels & controls */
+label {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    margin: 6px 12px 0 0;
+}
+
+/* text inputs */
+input[type="text"],
+input[type="search"],
+textarea,
+select {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: color-mix(in oklab, var(--card) 92%, transparent);
+    color: var(--text);
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    outline: none;
+}
+
+input[type="text"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+    border-color: color-mix(in oklab, var(--primary) 60%, var(--border));
+    box-shadow: var(--ring);
+    background: color-mix(in oklab, var(--card) 88%, var(--primary-weak) 12%);
+}
+
+textarea {
+    resize: vertical;
+}
+
+/* custom pills for radios/checkboxes */
+input[type="radio"],
+input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    display: inline-block;
+    position: relative;
+    transition: border-color .2s ease, background .2s ease, transform .12s ease;
+    background: color-mix(in oklab, var(--card) 92%, transparent);
+}
+
+input[type="radio"] {
+    border-radius: 999px;
+}
+
+input[type="radio"]:checked,
+input[type="checkbox"]:checked {
+    background: var(--primary);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 25%, transparent);
+}
+
+input[type="radio"]:active,
+input[type="checkbox"]:active {
+    transform: scale(.96);
+}
+
+/* buttons */
+button,
+.file-btn {
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .2s ease, background .2s ease, border-color .2s;
+    font: inherit;
+}
+
+button:hover,
+.file-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-1);
+}
+
+button:focus-visible,
+.file-btn:focus-within {
+    box-shadow: var(--ring);
+}
+
+button.primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+button.primary:hover {
+    box-shadow: var(--shadow-2);
+}
+
+button.ghost {
+    background: color-mix(in oklab, var(--card) 70%, transparent);
+}
+
+button.danger {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: white;
+}
+
+/* Import JSON label styled exactly like a button */
+.file-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    /* ensures same height feel */
+}
+
+.file-btn input {
+    display: none;
+}
+
+/* keep the file input invisible */
+
+/* Make the moon toggle a neat square icon button */
+#toggleTheme {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    /* square; relies on width/height */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+/* groups */
+.actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+/* toolbar + list */
+.toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.list li {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    background: var(--card);
+    margin-bottom: 10px;
+    cursor: pointer;
+    box-shadow: var(--shadow-1);
+    transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.list li:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-2);
+    border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
+}
+
+.list li::after {
+    content: '›';
+    font: 600 18px/1 var(--font-head);
+    color: var(--muted);
+    padding-left: 12px;
+}
+
+.list .meta {
+    color: var(--muted);
+    font: 13px/1.4 var(--font-sans);
+}
+
+/* dialog (detail view) */
+dialog {
+    border: none;
+    padding: 0;
+    border-radius: 16px;
+    width: min(760px, 92vw);
+    background: color-mix(in oklab, var(--card) 90%, var(--primary-weak) 10%);
+    color: var(--text);
+    box-shadow: var(--shadow-2);
+}
+
+dialog::backdrop {
+    background: rgba(0, 0, 0, .45);
+    backdrop-filter: blur(2px);
+}
+
+#detailContent {
+    padding: 18px;
+    max-height: 72vh;
+    overflow: auto;
+}
+
+.dialog-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 12px;
+    border-top: 1px solid var(--border);
+}
+
+/* detail content grid */
+.kv {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 8px 16px;
+}
+
+.kv .k {
+    color: var(--muted);
+    font: 600 13px/1 var(--font-head);
+    letter-spacing: .2px;
+}
+
+.kv .v {
+    white-space: pre-wrap;
+}
+
+/* images */
+.img-preview {
+    display: block;
+    max-width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-top: 10px;
+}
+
+/* headings */
+h1,
+h2 {
+    font-family: var(--font-head);
+}
+
+h2 {
+    font-weight: 700;
+    margin: 0 0 12px 0;
+}
+
+/* meta text */
+.meta,
+code,
+.mono {
+    font-family: var(--font-mono);
+    font-size: 13px;
+}
+
+/* responsive */
+@media (max-width: 760px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .kv {
+        grid-template-columns: 1fr;
+    }
 }
