@@ -92,6 +92,19 @@ const chipsEl = $('#typeChips');
 let entries = loadEntries();
 let currentDetailId = null;
 
+// ====== Migration: ensure like fields exist (PRESERVES existing data) ======
+entries = entries.map(e => ({
+    // defaults first
+    likes: 0,
+    liked: false,
+    // then spread existing entry
+    ...e,
+    // and finally prefer existing fields if present
+    likes: typeof e.likes === 'number' ? e.likes : 0,
+    liked: typeof e.liked === 'boolean' ? e.liked : false
+}));
+saveEntries(entries);
+
 // ====== Helpers tied to fields ======
 async function readFileAsDataURL(file) {
     if (!file) return '';
@@ -197,11 +210,38 @@ function renderList() {
 
             const right = document.createElement('div');
             right.className = 'row-actions';
-            const btnOpen = document.createElement('button'); btnOpen.className = 'iconbtn'; btnOpen.title = 'Open detail'; btnOpen.textContent = '⤢';
-            const btnEdit = document.createElement('button'); btnEdit.className = 'iconbtn'; btnEdit.title = 'Edit'; btnEdit.textContent = '✎';
-            const btnDelete = document.createElement('button'); btnDelete.className = 'iconbtn'; btnDelete.title = 'Delete'; btnDelete.textContent = '🗑';
-            const chev = document.createElement('span'); chev.className = 'chev'; chev.textContent = '›';
-            right.appendChild(btnOpen); right.appendChild(btnEdit); right.appendChild(btnDelete); right.appendChild(chev);
+
+            const btnOpen = document.createElement('button');
+            btnOpen.className = 'iconbtn';
+            btnOpen.title = 'Open detail';
+            btnOpen.textContent = '⤢';
+
+            const btnEdit = document.createElement('button');
+            btnEdit.className = 'iconbtn';
+            btnEdit.title = 'Edit';
+            btnEdit.textContent = '✎';
+
+            const btnDelete = document.createElement('button');
+            btnDelete.className = 'iconbtn';
+            btnDelete.title = 'Delete';
+            btnDelete.textContent = '🗑';
+
+            // NEW Like button
+            const btnLike = document.createElement('button');
+            btnLike.className = 'iconbtn like';
+            btnLike.title = 'Like';
+            btnLike.setAttribute('aria-pressed', e.liked ? 'true' : 'false');
+            btnLike.innerHTML = (e.liked ? '♥' : '♡') + `<span class="like-count">${e.likes || 0}</span>`;
+
+            const chev = document.createElement('span');
+            chev.className = 'chev';
+            chev.textContent = '›';
+
+            right.appendChild(btnOpen);
+            right.appendChild(btnEdit);
+            right.appendChild(btnDelete);
+            right.appendChild(btnLike); // like before chevron
+            right.appendChild(chev);
 
             row.appendChild(left); row.appendChild(right);
 
@@ -212,8 +252,8 @@ function renderList() {
 
             // Events
             row.addEventListener('click', (ev) => {
-                // avoid toggling when clicking action buttons
-                if (ev.target === btnOpen || ev.target === btnEdit || ev.target === btnDelete) return;
+                // avoid toggling when clicking action buttons (including inside like button)
+                if (ev.target === btnOpen || ev.target === btnEdit || ev.target === btnDelete || ev.target === btnLike || btnLike.contains(ev.target)) return;
                 li.classList.toggle('expanded');
                 chev.textContent = li.classList.contains('expanded') ? '˅' : '›';
             });
@@ -226,6 +266,22 @@ function renderList() {
                     saveEntries(entries);
                     renderList(); updateTabCounts();
                 }
+            });
+
+            // NEW: like toggle
+            btnLike.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                const idx = entries.findIndex(x => x.id === e.id);
+                if (idx < 0) return;
+                const curr = entries[idx];
+                const nextLiked = !curr.liked;
+                const nextLikes = Math.max(0, (curr.likes || 0) + (nextLiked ? 1 : -1));
+                entries[idx] = { ...curr, liked: nextLiked, likes: nextLikes };
+                saveEntries(entries);
+
+                // update button UI
+                btnLike.setAttribute('aria-pressed', nextLiked ? 'true' : 'false');
+                btnLike.innerHTML = (nextLiked ? '♥' : '♡') + `<span class="like-count">${nextLikes}</span>`;
             });
 
             li.appendChild(row);
@@ -380,10 +436,15 @@ $('#formWhite').addEventListener('submit', async (ev) => {
     const form = ev.currentTarget;
     const editingId = form.dataset.editId;
     const data = await collectForm(form, 'white');
+
+    // default like fields for new entries
+    if (typeof data.likes !== 'number') data.likes = 0;
+    if (typeof data.liked !== 'boolean') data.liked = false;
+
     if (editingId) {
         data.id = editingId;
         const idx = entries.findIndex(e => e.id === editingId);
-        if (idx >= 0) entries[idx] = data;
+        if (idx >= 0) entries[idx] = { ...entries[idx], ...data, id: editingId };
         form.dataset.editId = '';
     } else {
         entries.push(data);
@@ -399,10 +460,15 @@ $('#formRed').addEventListener('submit', async (ev) => {
     const form = ev.currentTarget;
     const editingId = form.dataset.editId;
     const data = await collectForm(form, 'red');
+
+    // default like fields for new entries
+    if (typeof data.likes !== 'number') data.likes = 0;
+    if (typeof data.liked !== 'boolean') data.liked = false;
+
     if (editingId) {
         data.id = editingId;
         const idx = entries.findIndex(e => e.id === editingId);
-        if (idx >= 0) entries[idx] = data;
+        if (idx >= 0) entries[idx] = { ...entries[idx], ...data, id: editingId };
         form.dataset.editId = '';
     } else {
         entries.push(data);
@@ -441,7 +507,7 @@ globalSearchEl.addEventListener('keydown', (e) => {
     }
 });
 document.addEventListener('keydown', (e) => {
-    if (e.key === '/') {
+    if (e.key === '/' && (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA')) {
         e.preventDefault(); globalSearchEl.focus();
     }
 });
@@ -508,7 +574,10 @@ quickAddSave.addEventListener('click', async (ev) => {
         texture: '',
         balance: '',
         finish: '',
-        photo: photoFile && photoFile.size ? await readFileAsDataURL(photoFile) : ''
+        photo: photoFile && photoFile.size ? await readFileAsDataURL(photoFile) : '',
+        // Likes defaults
+        likes: 0,
+        liked: false
     };
 
     entries.push(entry);

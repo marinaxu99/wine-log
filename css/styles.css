@@ -661,7 +661,8 @@ dialog::backdrop {
     gap: 8px 16px;
 }
 
-f .img-preview {
+/* fixed selector (typo) */
+.img-preview {
     display: block;
     max-width: 100%;
     border: 1px solid var(--border);
@@ -742,4 +743,33 @@ label.other-input {
     .quickadd .row {
         grid-template-columns: 1fr;
     }
+}
+
+/* ===== Likes (heart) ===== */
+.iconbtn.like {
+    position: relative;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.iconbtn.like[aria-pressed="true"] {
+    background: color-mix(in oklab, var(--primary) 20%, var(--card));
+    border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
+    box-shadow: var(--shadow-1);
+}
+
+.iconbtn.like .like-count {
+    font: 600 11px/1 var(--font-sans);
+    color: var(--muted);
+    margin-left: 6px;
+}
+
+/* fit 4th icon nicely */
+.row-actions .iconbtn {
+    width: 34px;
+    height: 34px;
+}
+
+.row-actions {
+    gap: 6px;
 }
