@@ -23,7 +23,6 @@ if (document.fonts && document.fonts.ready) {
 // Also run immediately in case JS loads after DOM is ready
 updateTopbarHeight();
 
-
 const STORAGE_KEY = 'wineLog.entries.v1';
 const THEME_KEY = 'wineLog.theme';
 const LAST_NEW_TYPE = 'wineLog.lastNewType';
@@ -33,27 +32,20 @@ function loadEntries() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
     catch { return []; }
 }
-function saveEntries(entries) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-}
-function uid() {
-    return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
+function saveEntries(entries) { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }
+function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 function setTheme(mode) {
     const root = document.documentElement;
-    if (mode === 'dark') root.classList.add('dark');
-    else root.classList.remove('dark');
+    if (mode === 'dark') root.classList.add('dark'); else root.classList.remove('dark');
     localStorage.setItem(THEME_KEY, mode);
 }
-function getTheme() {
-    return localStorage.getItem(THEME_KEY) || 'light';
-}
+function getTheme() { return localStorage.getItem(THEME_KEY) || 'light'; }
 function setLastTab(id) { localStorage.setItem(LAST_TAB, id); }
 function getLastTab() { return localStorage.getItem(LAST_TAB) || 'whiteForm'; }
 function setLastNewType(t) { localStorage.setItem(LAST_NEW_TYPE, t); }
 function getLastNewType() { return localStorage.getItem(LAST_NEW_TYPE) || 'white'; }
 
-// ====== Tabs & Theme (2, 11) ======
+// ====== Tabs & Theme ======
 $$('.tab').forEach(btn => {
     btn.addEventListener('click', () => {
         $$('.tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
@@ -72,34 +64,25 @@ $$('.tab').forEach(btn => {
 })();
 
 const themeBtn = $('#toggleTheme');
-function refreshThemeButton() {
-    const mode = getTheme();
-    themeBtn.textContent = mode === 'dark' ? '☀️' : '🌙';
-}
+function refreshThemeButton() { themeBtn.textContent = getTheme() === 'dark' ? '☀️' : '🌙'; }
 themeBtn.addEventListener('click', () => {
     const next = getTheme() === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    refreshThemeButton();
+    setTheme(next); refreshThemeButton();
 });
-setTheme(getTheme());
-refreshThemeButton();
+setTheme(getTheme()); refreshThemeButton();
 
 // ====== Data & State ======
 const listEl = $('#logList');
-const searchEl = $('#search');          // logs-local search
-const globalSearchEl = $('#globalSearch'); // topbar global search
+const searchEl = $('#search');              // logs-local search
+const globalSearchEl = $('#globalSearch');  // topbar global search
 const chipsEl = $('#typeChips');
 let entries = loadEntries();
 let currentDetailId = null;
 
 // ====== Migration: ensure like fields exist (PRESERVES existing data) ======
 entries = entries.map(e => ({
-    // defaults first
-    likes: 0,
-    liked: false,
-    // then spread existing entry
+    likes: 0, liked: false,   // defaults
     ...e,
-    // and finally prefer existing fields if present
     likes: typeof e.likes === 'number' ? e.likes : 0,
     liked: typeof e.liked === 'boolean' ? e.liked : false
 }));
@@ -115,11 +98,9 @@ async function readFileAsDataURL(file) {
         fr.readAsDataURL(file);
     });
 }
-function getCheckedValues(inputs) {
-    return inputs.filter(i => i.checked).map(i => i.value);
-}
+function getCheckedValues(inputs) { return inputs.filter(i => i.checked).map(i => i.value); }
 
-// ====== Forms to JSON (unchanged logic, with corrected labels kept in HTML) ======
+// ====== Forms to JSON ======
 async function collectForm(form, type) {
     const fd = new FormData(form);
     const entry = {
@@ -137,11 +118,8 @@ async function collectForm(form, type) {
     entry.smell_intensity = fd.get('smell_intensity') || '';
 
     // NOSE descriptors
-    if (type === 'white') {
-        entry.smell_fresh = getCheckedValues($$('input[name="smell_fresh"]', form));
-    } else {
-        entry.smell_fruit_red = getCheckedValues($$('input[name="smell_fruit_red"]', form));
-    }
+    if (type === 'white') entry.smell_fresh = getCheckedValues($$('input[name="smell_fresh"]', form));
+    else entry.smell_fruit_red = getCheckedValues($$('input[name="smell_fruit_red"]', form));
     entry.smell_other = getCheckedValues($$('input[name="smell_other"]', form));
     entry.smell_other_text = (fd.get('smell_other_text') || '').toString();
 
@@ -152,11 +130,8 @@ async function collectForm(form, type) {
     entry.astringency = fd.get('astringency') || '';
 
     // PALATE descriptors
-    if (type === 'white') {
-        entry.palate_fresh = getCheckedValues($$('input[name="palate_fresh"]', form));
-    } else {
-        entry.palate_fruit_red = getCheckedValues($$('input[name="palate_fruit_red"]', form));
-    }
+    if (type === 'white') entry.palate_fresh = getCheckedValues($$('input[name="palate_fresh"]', form));
+    else entry.palate_fruit_red = getCheckedValues($$('input[name="palate_fruit_red"]', form));
     entry.palate_other = getCheckedValues($$('input[name="palate_other"]', form));
     entry.palate_other_text = (fd.get('palate_other_text') || '').toString();
 
@@ -212,21 +187,15 @@ function renderList() {
             right.className = 'row-actions';
 
             const btnOpen = document.createElement('button');
-            btnOpen.className = 'iconbtn';
-            btnOpen.title = 'Open detail';
-            btnOpen.textContent = '⤢';
+            btnOpen.className = 'iconbtn'; btnOpen.title = 'Open detail'; btnOpen.textContent = '⤢';
 
             const btnEdit = document.createElement('button');
-            btnEdit.className = 'iconbtn';
-            btnEdit.title = 'Edit';
-            btnEdit.textContent = '✎';
+            btnEdit.className = 'iconbtn'; btnEdit.title = 'Edit'; btnEdit.textContent = '✎';
 
             const btnDelete = document.createElement('button');
-            btnDelete.className = 'iconbtn';
-            btnDelete.title = 'Delete';
-            btnDelete.textContent = '🗑';
+            btnDelete.className = 'iconbtn'; btnDelete.title = 'Delete'; btnDelete.textContent = '🗑';
 
-            // NEW Like button
+            // Like button
             const btnLike = document.createElement('button');
             btnLike.className = 'iconbtn like';
             btnLike.title = 'Like';
@@ -234,13 +203,12 @@ function renderList() {
             btnLike.innerHTML = (e.liked ? '♥' : '♡') + `<span class="like-count">${e.likes || 0}</span>`;
 
             const chev = document.createElement('span');
-            chev.className = 'chev';
-            chev.textContent = '›';
+            chev.className = 'chev'; chev.textContent = '›';
 
             right.appendChild(btnOpen);
             right.appendChild(btnEdit);
             right.appendChild(btnDelete);
-            right.appendChild(btnLike); // like before chevron
+            right.appendChild(btnLike);
             right.appendChild(chev);
 
             row.appendChild(left); row.appendChild(right);
@@ -268,7 +236,7 @@ function renderList() {
                 }
             });
 
-            // NEW: like toggle
+            // Like toggle
             btnLike.addEventListener('click', (ev) => {
                 ev.stopPropagation();
                 const idx = entries.findIndex(x => x.id === e.id);
@@ -299,15 +267,13 @@ function buildPreviewHTML(e) {
     html += kv('Hue density', e.hue_density);
     html += kv('Hue', e.hue);
     html += kv('Smell intensity', e.smell_intensity);
-    if (e.type === 'white') html += kv('Nose fresh fruit', e.smell_fresh);
-    else html += kv('Nose fruit', e.smell_fruit_red);
+    if (e.type === 'white') html += kv('Nose fresh fruit', e.smell_fresh); else html += kv('Nose fruit', e.smell_fruit_red);
     html += kv('Nose (other)', [...(e.smell_other || []), e.smell_other_text].filter(Boolean));
     html += kv('Sweetness', e.sweetness);
     html += kv('Sourness', e.sourness);
     html += kv('Bitterness', e.bitterness);
     html += kv('Astringency', e.astringency);
-    if (e.type === 'white') html += kv('Palate/finish — fresh fruit', e.palate_fresh);
-    else html += kv('Palate/finish — fruit', e.palate_fruit_red);
+    if (e.type === 'white') html += kv('Palate/finish — fresh fruit', e.palate_fresh); else html += kv('Palate/finish — fruit', e.palate_fruit_red);
     html += kv('Palate/finish (other)', [...(e.palate_other || []), e.palate_other_text].filter(Boolean));
     html += kv('Body', e.body);
     html += kv('Texture', e.texture);
@@ -488,7 +454,7 @@ function switchTo(id) {
 // ====== Search / Filter / Clear ======
 searchEl.addEventListener('input', renderList);
 
-// chips: type filter (4)
+// chips: type filter
 chipsEl.addEventListener('click', (e) => {
     const btn = e.target.closest('.chip');
     if (!btn) return;
@@ -497,17 +463,17 @@ chipsEl.addEventListener('click', (e) => {
     renderList();
 });
 
-// topbar global search (3)
+// topbar global search
 globalSearchEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-        // push to Logs and apply query
         switchTo('logsView');
         searchEl.value = globalSearchEl.value.trim();
         renderList();
     }
 });
 document.addEventListener('keydown', (e) => {
-    if (e.key === '/' && (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA')) {
+    const tag = (document.activeElement?.tagName || '').toUpperCase();
+    if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA') {
         e.preventDefault(); globalSearchEl.focus();
     }
 });
@@ -520,7 +486,7 @@ $('#clearAll').addEventListener('click', () => {
     }
 });
 
-// ====== Count badges (2) ======
+// ====== Count badges ======
 function updateTabCounts() {
     const white = entries.filter(e => e.type === 'white').length;
     const red = entries.filter(e => e.type === 'red').length;
@@ -529,7 +495,7 @@ function updateTabCounts() {
     $('#countAll').textContent = entries.length;
 }
 
-// ====== Quick Add (8) ======
+// ====== Quick Add ======
 const quickAddDialog = $('#quickAddDialog');
 const quickAddForm = $('#quickAddForm');
 const quickAddSave = $('#quickAddSave');
@@ -575,7 +541,6 @@ quickAddSave.addEventListener('click', async (ev) => {
         balance: '',
         finish: '',
         photo: photoFile && photoFile.size ? await readFileAsDataURL(photoFile) : '',
-        // Likes defaults
         likes: 0,
         liked: false
     };
@@ -590,40 +555,18 @@ quickAddSave.addEventListener('click', async (ev) => {
     startEdit(entry.id);
 });
 
-// ====== New Entry split button (1, 11) ======
+// ====== New Entry main (dropdown disabled/hidden) ======
 const newEntryMain = $('#newEntryMain');
-const newEntryMenuBtn = $('#newEntryMenuBtn');
-const newEntryMenu = $('#newEntryMenu');
-
-function openMenu(open) {
-    newEntryMenu.classList.toggle('open', open);
-    newEntryMenuBtn.setAttribute('aria-expanded', String(open));
-    newEntryMenu.setAttribute('aria-hidden', String(!open));
-}
-
 newEntryMain.addEventListener('click', () => {
-    // open last used type form
     const t = getLastNewType();
     switchTo(t === 'white' ? 'whiteForm' : 'redForm');
 });
 
-newEntryMenuBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const willOpen = !newEntryMenu.classList.contains('open');
-    openMenu(willOpen);
-});
-
-newEntryMenu.addEventListener('click', (e) => {
-    const btn = e.target.closest('.menuitem');
-    if (!btn) return;
-    const t = btn.dataset.newtype;
-    setLastNewType(t);
-    openMenu(false);
-    switchTo(t === 'white' ? 'whiteForm' : 'redForm');
-});
-document.addEventListener('click', (e) => {
-    if (!newEntryMenu.contains(e.target) && e.target !== newEntryMenuBtn) openMenu(false);
-});
+/* NOTE:
+   We intentionally do NOT wire up the dropdown caret/menu anymore.
+   Even if #newEntryMenuBtn and #newEntryMenu exist in the HTML,
+   they are hidden via CSS and no JS listeners are attached.
+*/
 
 // ====== Init ======
 function initChipsFromHash() {

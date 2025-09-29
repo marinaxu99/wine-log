@@ -217,7 +217,7 @@ code,
     box-shadow: var(--ring);
 }
 
-/* Split button + menu */
+/* Split button (+ dropdown hidden) */
 .split {
     position: relative;
     display: inline-flex;
@@ -230,42 +230,18 @@ code,
     border: 1px solid var(--border);
 }
 
+/* keep a full border even without the caret */
 .split>.primary {
-    border-right: none;
+    border-right: 1px solid var(--border);
 }
 
-.split>.caret {
-    background: color-mix(in oklab, var(--card) 80%, transparent);
-    width: 42px;
+/* HIDE the unused caret + menu */
+.split .caret {
+    display: none !important;
 }
 
 .menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    min-width: 160px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 6px;
-    box-shadow: var(--shadow-2);
-    display: none;
-}
-
-.menu.open {
-    display: block;
-}
-
-.menu .menuitem {
-    width: 100%;
-    text-align: left;
-    padding: 10px;
-    border-radius: 10px;
-    background: transparent;
-}
-
-.menu .menuitem:hover {
-    background: color-mix(in oklab, var(--primary-weak) 40%, var(--card));
+    display: none !important;
 }
 
 /* Tabs with badges */
@@ -350,7 +326,7 @@ code,
     min-width: 160px;
 }
 
-/* Grouped sections (APPEARANCE / NOSE / PALATE) */
+/* Grouped sections */
 .group {
     border: 1px solid color-mix(in oklab, var(--border) 80%, var(--primary-weak) 20%);
     border-radius: 14px;
@@ -384,7 +360,7 @@ label {
     margin: 6px 12px 0 0;
 }
 
-/* text inputs */
+/* inputs */
 input[type="text"],
 input[type="search"],
 textarea,
@@ -709,12 +685,9 @@ dialog::backdrop {
 /* Make "other:" inputs span full width and stack vertically */
 label.other-input {
     display: flex;
-    /* instead of inline-flex */
     flex-direction: row;
-    /* stack label text above input */
     align-items: flex-start;
     margin-top: 12px;
-    /* consistent spacing */
     align-items: center;
     margin: 0 10rem 0 10rem;
 }
