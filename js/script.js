@@ -9,20 +9,18 @@ function updateTopbarHeight() {
     const h = tb.offsetHeight; // includes wrapping/rows
     document.documentElement.style.setProperty('--topbar-h', h + 'px');
 }
-
 // Recalculate on load, after fonts, and on resize/orientation changes
 window.addEventListener('load', updateTopbarHeight);
 window.addEventListener('resize', updateTopbarHeight);
 window.addEventListener('orientationchange', updateTopbarHeight);
-
-// If browser supports the Font Loading API, recalc when fonts finish (prevents overlap after webfonts swap in)
+// Font Loading API: recalc when fonts finish
 if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(updateTopbarHeight);
 }
-
-// Also run immediately in case JS loads after DOM is ready
+// Also run immediately
 updateTopbarHeight();
 
+// ====== Storage keys (UNCHANGED to preserve your data) ======
 const STORAGE_KEY = 'wineLog.entries.v1';
 const THEME_KEY = 'wineLog.theme';
 const LAST_NEW_TYPE = 'wineLog.lastNewType';
@@ -32,14 +30,21 @@ function loadEntries() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
     catch { return []; }
 }
-function saveEntries(entries) { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }
-function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+function saveEntries(entries) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+function uid() {
+    return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
 function setTheme(mode) {
     const root = document.documentElement;
-    if (mode === 'dark') root.classList.add('dark'); else root.classList.remove('dark');
+    if (mode === 'dark') root.classList.add('dark');
+    else root.classList.remove('dark');
     localStorage.setItem(THEME_KEY, mode);
 }
 function getTheme() { return localStorage.getItem(THEME_KEY) || 'light'; }
+
 function setLastTab(id) { localStorage.setItem(LAST_TAB, id); }
 function getLastTab() { return localStorage.getItem(LAST_TAB) || 'whiteForm'; }
 function setLastNewType(t) { localStorage.setItem(LAST_NEW_TYPE, t); }
@@ -48,8 +53,13 @@ function getLastNewType() { return localStorage.getItem(LAST_NEW_TYPE) || 'white
 // ====== Tabs & Theme ======
 $$('.tab').forEach(btn => {
     btn.addEventListener('click', () => {
-        $$('.tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
-        btn.classList.add('active'); btn.setAttribute('aria-selected', 'true');
+        $$('.tab').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+
         const target = btn.dataset.tab;
         $$('.tabpanel').forEach(p => p.classList.remove('active'));
         $('#' + target).classList.add('active');
@@ -63,32 +73,39 @@ $$('.tab').forEach(btn => {
     switchTo(target);
 })();
 
+// theme toggle
 const themeBtn = $('#toggleTheme');
-function refreshThemeButton() { themeBtn.textContent = getTheme() === 'dark' ? '☀️' : '🌙'; }
+function refreshThemeButton() {
+    themeBtn.textContent = getTheme() === 'dark' ? '☀️' : '🌙';
+}
 themeBtn.addEventListener('click', () => {
     const next = getTheme() === 'dark' ? 'light' : 'dark';
-    setTheme(next); refreshThemeButton();
+    setTheme(next);
+    refreshThemeButton();
 });
-setTheme(getTheme()); refreshThemeButton();
+setTheme(getTheme());
+refreshThemeButton();
 
 // ====== Data & State ======
 const listEl = $('#logList');
-const searchEl = $('#search');              // logs-local search
+const searchEl = $('#search');        // logs-local search
 const globalSearchEl = $('#globalSearch');  // topbar global search
 const chipsEl = $('#typeChips');
+
 let entries = loadEntries();
 let currentDetailId = null;
 
-// ====== Migration: ensure like fields exist (PRESERVES existing data) ======
+// ====== Migration: ensure like fields exist (preserves existing data) ======
 entries = entries.map(e => ({
-    likes: 0, liked: false,   // defaults
+    likes: 0,
+    liked: false,
     ...e,
     likes: typeof e.likes === 'number' ? e.likes : 0,
     liked: typeof e.liked === 'boolean' ? e.liked : false
 }));
 saveEntries(entries);
 
-// ====== Helpers tied to fields ======
+// ====== Helpers ======
 async function readFileAsDataURL(file) {
     if (!file) return '';
     return new Promise((resolve, reject) => {
@@ -98,7 +115,9 @@ async function readFileAsDataURL(file) {
         fr.readAsDataURL(file);
     });
 }
-function getCheckedValues(inputs) { return inputs.filter(i => i.checked).map(i => i.value); }
+function getCheckedValues(inputs) {
+    return inputs.filter(i => i.checked).map(i => i.value);
+}
 
 // ====== Forms to JSON ======
 async function collectForm(form, type) {
@@ -149,16 +168,34 @@ async function collectForm(form, type) {
 }
 
 // ====== Rendering ======
+// NEW: concise smell + palate meta for the Logs row
 function shortMeta(e) {
-    const hue = e.hue || '-';
-    const finish = e.finish || '-';
-    return `${hue} • ${finish}`;
+    const take = (arr, n = 2) => (arr || []).filter(Boolean).slice(0, n);
+
+    // Build "nose" list
+    const nose =
+        e.type === 'white'
+            ? [...take(e.smell_fresh, 2), ...take(e.smell_other, 1)]
+            : [...take(e.smell_fruit_red, 2), ...take(e.smell_other, 1)];
+    if (e.smell_other_text) nose.push(e.smell_other_text);
+
+    // Build "palate" list
+    const palate =
+        e.type === 'white'
+            ? [...take(e.palate_fresh, 2), ...take(e.palate_other, 1)]
+            : [...take(e.palate_fruit_red, 2), ...take(e.palate_other, 1)];
+    if (e.palate_other_text) palate.push(e.palate_other_text);
+
+    const noseStr = nose.filter(Boolean).slice(0, 3).join(', ') || '-';
+    const palateStr = palate.filter(Boolean).slice(0, 3).join(', ') || '-';
+
+    // Example result: "cherry, blackberry • oak"
+    return `${noseStr} • ${palateStr}`;
 }
 
 function renderList() {
     const q = searchEl.value.trim().toLowerCase();
-    const activeChip = $('.chip.selected', chipsEl);
-    const ft = activeChip ? activeChip.dataset.type : '';
+    const ft = ($('.chip.selected', chipsEl) || {}).dataset?.type || '';
 
     const filtered = entries.filter(e => {
         const matchQ = !q || (e.name?.toLowerCase().includes(q) || e.notes?.toLowerCase().includes(q));
@@ -177,23 +214,35 @@ function renderList() {
             row.className = 'row row-main';
 
             const left = document.createElement('div');
-            const title = document.createElement('div'); title.className = 'title'; title.textContent = e.name || '(no name)';
-            const meta = document.createElement('div'); meta.className = 'meta';
+            const title = document.createElement('div');
+            title.className = 'title';
+            title.textContent = e.name || '(no name)';
+
+            const meta = document.createElement('div');
+            meta.className = 'meta';
             const dt = new Date(e.date).toLocaleString();
             meta.textContent = `${e.type.toUpperCase()} • ${shortMeta(e)} • ${dt}`;
-            left.appendChild(title); left.appendChild(meta);
+
+            left.appendChild(title);
+            left.appendChild(meta);
 
             const right = document.createElement('div');
             right.className = 'row-actions';
 
             const btnOpen = document.createElement('button');
-            btnOpen.className = 'iconbtn'; btnOpen.title = 'Open detail'; btnOpen.textContent = '⤢';
+            btnOpen.className = 'iconbtn';
+            btnOpen.title = 'Open detail';
+            btnOpen.textContent = '⤢';
 
             const btnEdit = document.createElement('button');
-            btnEdit.className = 'iconbtn'; btnEdit.title = 'Edit'; btnEdit.textContent = '✎';
+            btnEdit.className = 'iconbtn';
+            btnEdit.title = 'Edit';
+            btnEdit.textContent = '✎';
 
             const btnDelete = document.createElement('button');
-            btnDelete.className = 'iconbtn'; btnDelete.title = 'Delete'; btnDelete.textContent = '🗑';
+            btnDelete.className = 'iconbtn';
+            btnDelete.title = 'Delete';
+            btnDelete.textContent = '🗑';
 
             // Like button
             const btnLike = document.createElement('button');
@@ -203,7 +252,8 @@ function renderList() {
             btnLike.innerHTML = (e.liked ? '♥' : '♡') + `<span class="like-count">${e.likes || 0}</span>`;
 
             const chev = document.createElement('span');
-            chev.className = 'chev'; chev.textContent = '›';
+            chev.className = 'chev';
+            chev.textContent = '›';
 
             right.appendChild(btnOpen);
             right.appendChild(btnEdit);
@@ -211,7 +261,8 @@ function renderList() {
             right.appendChild(btnLike);
             right.appendChild(chev);
 
-            row.appendChild(left); row.appendChild(right);
+            row.appendChild(left);
+            row.appendChild(right);
 
             // Inline expand preview
             const expand = document.createElement('div');
@@ -220,7 +271,6 @@ function renderList() {
 
             // Events
             row.addEventListener('click', (ev) => {
-                // avoid toggling when clicking action buttons (including inside like button)
                 if (ev.target === btnOpen || ev.target === btnEdit || ev.target === btnDelete || ev.target === btnLike || btnLike.contains(ev.target)) return;
                 li.classList.toggle('expanded');
                 chev.textContent = li.classList.contains('expanded') ? '˅' : '›';
@@ -232,11 +282,10 @@ function renderList() {
                 if (confirm('Delete this entry?')) {
                     entries = entries.filter(x => x.id !== e.id);
                     saveEntries(entries);
-                    renderList(); updateTabCounts();
+                    renderList();
+                    updateTabCounts();
                 }
             });
-
-            // Like toggle
             btnLike.addEventListener('click', (ev) => {
                 ev.stopPropagation();
                 const idx = entries.findIndex(x => x.id === e.id);
@@ -246,8 +295,6 @@ function renderList() {
                 const nextLikes = Math.max(0, (curr.likes || 0) + (nextLiked ? 1 : -1));
                 entries[idx] = { ...curr, liked: nextLiked, likes: nextLikes };
                 saveEntries(entries);
-
-                // update button UI
                 btnLike.setAttribute('aria-pressed', nextLiked ? 'true' : 'false');
                 btnLike.innerHTML = (nextLiked ? '♥' : '♡') + `<span class="like-count">${nextLikes}</span>`;
             });
@@ -267,13 +314,15 @@ function buildPreviewHTML(e) {
     html += kv('Hue density', e.hue_density);
     html += kv('Hue', e.hue);
     html += kv('Smell intensity', e.smell_intensity);
-    if (e.type === 'white') html += kv('Nose fresh fruit', e.smell_fresh); else html += kv('Nose fruit', e.smell_fruit_red);
+    if (e.type === 'white') html += kv('Nose fresh fruit', e.smell_fresh);
+    else html += kv('Nose fruit', e.smell_fruit_red);
     html += kv('Nose (other)', [...(e.smell_other || []), e.smell_other_text].filter(Boolean));
     html += kv('Sweetness', e.sweetness);
     html += kv('Sourness', e.sourness);
     html += kv('Bitterness', e.bitterness);
     html += kv('Astringency', e.astringency);
-    if (e.type === 'white') html += kv('Palate/finish — fresh fruit', e.palate_fresh); else html += kv('Palate/finish — fruit', e.palate_fruit_red);
+    if (e.type === 'white') html += kv('Palate/finish — fresh fruit', e.palate_fresh);
+    else html += kv('Palate/finish — fruit', e.palate_fruit_red);
     html += kv('Palate/finish (other)', [...(e.palate_other || []), e.palate_other_text].filter(Boolean));
     html += kv('Body', e.body);
     html += kv('Texture', e.texture);
@@ -285,7 +334,6 @@ function buildPreviewHTML(e) {
     html += `</div>`;
     return html;
 }
-
 function kv(label, value) {
     const safe = (v) => (Array.isArray(v) ? v.join(', ') : (v || ''));
     return `<div class="k">${label}</div><div class="v">${safe(value)}</div>`;
@@ -301,39 +349,33 @@ function openDetail(id) {
     html += kv('Hue density', e.hue_density);
     html += kv('Hue', e.hue);
     html += kv('Smell intensity', e.smell_intensity);
-
     if (e.type === 'white') html += kv('Smell descriptors: fresh fruit', e.smell_fresh);
     else html += kv('Smell descriptors: fruit', e.smell_fruit_red);
     html += kv('Smell descriptors (other)', [...(e.smell_other || []), e.smell_other_text].filter(Boolean));
-
     html += kv('Sweetness', e.sweetness);
     html += kv('Sourness', e.sourness);
     html += kv('Bitterness', e.bitterness);
     html += kv('Astringency', e.astringency);
-
     if (e.type === 'white') html += kv('Palate/finish — fresh fruit', e.palate_fresh);
     else html += kv('Palate/finish — fruit', e.palate_fruit_red);
     html += kv('Palate/finish (other)', [...(e.palate_other || []), e.palate_other_text].filter(Boolean));
-
     html += kv('Body', e.body);
     html += kv('Texture', e.texture);
     html += kv('Balance', e.balance);
     html += kv('Finish', e.finish);
     html += kv('Side notes', e.notes);
     html += `</div>`;
-
     if (e.photo) html += `<img class="img-preview" src="${e.photo}" alt="photo" />`;
-
     art.innerHTML = html;
     $('#detailDialog').showModal();
 }
 $('#closeDetail').addEventListener('click', () => $('#detailDialog').close());
-
 $('#deleteEntry').addEventListener('click', () => {
     if (!currentDetailId) return;
     entries = entries.filter(e => e.id !== currentDetailId);
     saveEntries(entries);
-    renderList(); updateTabCounts();
+    renderList();
+    updateTabCounts();
     $('#detailDialog').close();
 });
 $('#editEntry').addEventListener('click', () => {
@@ -363,7 +405,6 @@ function fillForm(e) {
 
     if (e.type === 'white') setChecks(form, 'smell_fresh', e.smell_fresh || []);
     else setChecks(form, 'smell_fruit_red', e.smell_fruit_red || []);
-
     setChecks(form, 'smell_other', e.smell_other || []);
     if (form.smell_other_text) form.smell_other_text.value = e.smell_other_text || '';
 
@@ -374,7 +415,6 @@ function fillForm(e) {
 
     if (e.type === 'white') setChecks(form, 'palate_fresh', e.palate_fresh || []);
     else setChecks(form, 'palate_fruit_red', e.palate_fruit_red || []);
-
     setChecks(form, 'palate_other', e.palate_other || []);
     if (form.palate_other_text) form.palate_other_text.value = e.palate_other_text || '';
 
@@ -384,9 +424,7 @@ function fillForm(e) {
     setRadio(form, 'finish', e.finish);
 
     form.notes.value = e.notes || '';
-
-    // stash id for overwrite on submit
-    form.dataset.editId = e.id;
+    form.dataset.editId = e.id; // stash id for overwrite on submit
 }
 function setRadio(form, name, value) {
     const el = $$(`input[name="${name}"]`, form).find(i => i.value === value);
@@ -403,7 +441,6 @@ $('#formWhite').addEventListener('submit', async (ev) => {
     const editingId = form.dataset.editId;
     const data = await collectForm(form, 'white');
 
-    // default like fields for new entries
     if (typeof data.likes !== 'number') data.likes = 0;
     if (typeof data.liked !== 'boolean') data.liked = false;
 
@@ -417,7 +454,8 @@ $('#formWhite').addEventListener('submit', async (ev) => {
     }
     saveEntries(entries);
     form.reset();
-    renderList(); updateTabCounts();
+    renderList();
+    updateTabCounts();
     switchTo('logsView');
 });
 
@@ -427,7 +465,6 @@ $('#formRed').addEventListener('submit', async (ev) => {
     const editingId = form.dataset.editId;
     const data = await collectForm(form, 'red');
 
-    // default like fields for new entries
     if (typeof data.likes !== 'number') data.likes = 0;
     if (typeof data.liked !== 'boolean') data.liked = false;
 
@@ -441,7 +478,8 @@ $('#formRed').addEventListener('submit', async (ev) => {
     }
     saveEntries(entries);
     form.reset();
-    renderList(); updateTabCounts();
+    renderList();
+    updateTabCounts();
     switchTo('logsView');
 });
 
@@ -474,7 +512,8 @@ globalSearchEl.addEventListener('keydown', (e) => {
 document.addEventListener('keydown', (e) => {
     const tag = (document.activeElement?.tagName || '').toUpperCase();
     if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA') {
-        e.preventDefault(); globalSearchEl.focus();
+        e.preventDefault();
+        globalSearchEl.focus();
     }
 });
 
@@ -482,7 +521,8 @@ $('#clearAll').addEventListener('click', () => {
     if (confirm('Delete ALL entries? This cannot be undone.')) {
         entries = [];
         saveEntries(entries);
-        renderList(); updateTabCounts();
+        renderList();
+        updateTabCounts();
     }
 });
 
@@ -505,14 +545,16 @@ fab.addEventListener('click', () => {
     quickAddForm.reset();
     quickAddDialog.showModal();
 });
-
 quickAddSave.addEventListener('click', async (ev) => {
     ev.preventDefault();
     const fd = new FormData(quickAddForm);
     const name = (fd.get('name') || '').toString().trim();
     const type = (fd.get('type') || 'white').toString();
-    if (!name) { alert('Please enter a name'); return; }
 
+    if (!name) {
+        alert('Please enter a name');
+        return;
+    }
     const photoFile = fd.get('photo');
     const entry = {
         id: uid(),
@@ -547,26 +589,14 @@ quickAddSave.addEventListener('click', async (ev) => {
 
     entries.push(entry);
     saveEntries(entries);
-    renderList(); updateTabCounts();
+    renderList();
+    updateTabCounts();
     quickAddDialog.close();
 
     // Jump user into full form for refinement
     setLastNewType(type);
     startEdit(entry.id);
 });
-
-// ====== New Entry main (dropdown disabled/hidden) ======
-const newEntryMain = $('#newEntryMain');
-newEntryMain.addEventListener('click', () => {
-    const t = getLastNewType();
-    switchTo(t === 'white' ? 'whiteForm' : 'redForm');
-});
-
-/* NOTE:
-   We intentionally do NOT wire up the dropdown caret/menu anymore.
-   Even if #newEntryMenuBtn and #newEntryMenu exist in the HTML,
-   they are hidden via CSS and no JS listeners are attached.
-*/
 
 // ====== Init ======
 function initChipsFromHash() {
