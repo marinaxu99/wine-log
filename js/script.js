@@ -232,12 +232,12 @@ function renderList() {
             const btnOpen = document.createElement('button');
             btnOpen.className = 'iconbtn';
             btnOpen.title = 'Open detail';
-            btnOpen.textContent = '⤢';
+            btnOpen.textContent = '📂';
 
             const btnEdit = document.createElement('button');
             btnEdit.className = 'iconbtn';
             btnEdit.title = 'Edit';
-            btnEdit.textContent = '✎';
+            btnEdit.textContent = '✏️';
 
             const btnDelete = document.createElement('button');
             btnDelete.className = 'iconbtn';
