@@ -54,6 +54,9 @@
         <button class="tab" data-tab="logsView" role="tab" aria-selected="false">
             Logs <span class="badge" id="countAll">0</span>
         </button>
+        <button class="tab" data-tab="publicView" role="tab" aria-selected="false">
+            Public
+        </button>
     </nav>
 
     <!-- WHITE WINE FORM -->
@@ -480,6 +483,19 @@
         </dialog>
     </section>
 
+    <section id="publicView" class="tabpanel" role="tabpanel" aria-labelledby="tab-public">
+        <div class="card">
+            <h2>Public Pool</h2>
+            <p class="meta">This tab loads a public snapshot from <code>/data/public-logs.json</code>.</p>
+            <div class="toolbar">
+                <button id="exportPublic" class="primary">Export Public JSON</button>
+                <div class="spacer"></div>
+                <a class="mono" href="/data/public-logs.json" target="_blank" rel="noopener">View current JSON</a>
+            </div>
+            <ul id="publicList" class="list"></ul>
+        </div>
+    </section>
+
     <!-- (8) Quick Add dialog (also used by mobile FAB) -->
     <dialog id="quickAddDialog">
         <form id="quickAddForm" method="dialog" class="card quickadd">
@@ -511,7 +527,7 @@
     <!-- (1/8) Mobile FAB for Quick Add -->
     <button id="fabQuickAdd" class="fab" aria-label="Quick add">＋</button>
 
-    <script src="js/script.js"></script>
+    <script src="js/script.js" defer></script>
 </body>
 
 </html>
