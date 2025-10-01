@@ -746,3 +746,37 @@ label.other-input {
 .row-actions {
     gap: 6px;
 }
+
+/* ---------- Public page thumbnail sizing (scoped) ---------- */
+#publicLogList .preview {
+    grid-template-columns: 140px 1fr;
+    /* narrower, consistent left column */
+    align-items: center;
+    /* centers image nicely */
+}
+
+#publicLogList .thumb {
+    display: block;
+    width: 120px;
+    /* fixed width so all cards align */
+    height: 160px;
+    /* fixed height for uniform rows */
+    object-fit: contain;
+    /* keep bottle proportions */
+    background: var(--card);
+    /* optional: neutral backdrop */
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+/* Tweak for small screens */
+@media (max-width: 760px) {
+    #publicLogList .preview {
+        grid-template-columns: 100px 1fr;
+    }
+
+    #publicLogList .thumb {
+        width: 90px;
+        height: 120px;
+    }
+}
