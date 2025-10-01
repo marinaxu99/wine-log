@@ -64,14 +64,18 @@ $$('.tab').forEach(btn => {
         $$('.tabpanel').forEach(p => p.classList.remove('active'));
         $('#' + target).classList.add('active');
         setLastTab(target);
+
+        if (target === 'publicView') loadPublicSnapshot();
+
     });
 });
 
-// restore last tab on load
 (function initTab() {
     const target = getLastTab();
     switchTo(target);
+    if (target === 'publicView') loadPublicSnapshot();
 })();
+
 
 // theme toggle
 const themeBtn = $('#toggleTheme');
@@ -620,19 +624,62 @@ async function loadPublicSnapshot() {
 function renderPublicList(entries) {
     const list = $('#publicLogList');
     list.innerHTML = '';
-    if (!entries.length) {
-        list.innerHTML = '<li class="meta">No entries yet.</li>';
+
+    if (!entries || !entries.length) {
+        list.innerHTML = '<li class="row"><div class="meta">No entries yet.</div></li>';
         return;
     }
+
     entries
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .forEach(e => {
-            const li = document.createElement('li');
-            li.className = 'row';
-            li.textContent = `${e.type.toUpperCase()} • ${e.name || '(no name)'}`;
+            // Each item uses the same structure/classes as your Logs list
+            const li = document.createElement('li'); // styled by .list li
+
+            // Row container (same padding/shadow behavior)
+            const row = document.createElement('div');
+            row.className = 'row'; // reuse your .row styles
+            row.style.cursor = 'default'; // no expand/click
+
+            // Use the existing "preview" grid layout
+            const preview = document.createElement('div');
+            preview.className = 'preview';
+
+            // Left: thumbnail (same .thumb class as elsewhere)
+            const left = document.createElement('div');
+            if (e.photo) {
+                const img = document.createElement('img');
+                img.className = 'thumb';
+                img.src = e.photo;
+                img.alt = 'photo';
+                left.appendChild(img);
+            }
+            // If no photo, keep an empty div so grid spacing matches
+            preview.appendChild(left);
+
+            // Right: title + meta (reuse .title / .meta styles)
+            const right = document.createElement('div');
+            const title = document.createElement('div');
+            title.className = 'title';
+            title.textContent = e.name || '(no name)';
+
+            const meta = document.createElement('div');
+            meta.className = 'meta';
+            const dt = new Date(e.date).toLocaleString();
+            const metaText = (typeof shortMeta === 'function')
+                ? `${(e.type || '').toUpperCase()} • ${shortMeta(e)} • ${dt}`
+                : `${(e.type || '').toUpperCase()} • ${dt}`;
+            meta.textContent = metaText;
+
+            right.append(title, meta);
+            preview.appendChild(right);
+
+            row.appendChild(preview);
+            li.appendChild(row);
             list.appendChild(li);
         });
 }
+
 
 // ====== Public Logs (loader + renderer) ======
 async function loadPublicSnapshot() {
