@@ -713,37 +713,90 @@ async function shrinkDataURL(dataURL, maxW = 1200, quality = 0.85) {
     }
 }
 
-document.getElementById('exportPublic')?.addEventListener('click', async () => {
-    // Build the same filtered set your Logs tab shows
+// ====== Export Public JSON (Safari-friendly, with photos) ======
+async function shrinkDataURL(dataURL, maxW = 1200, quality = 0.85) {
+    try {
+        if (!dataURL || !dataURL.startsWith('data:image')) return dataURL;
+        const img = new Image();
+        img.src = dataURL;
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+        const scale = Math.min(1, maxW / img.width);
+        if (scale >= 1) return dataURL;
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        return c.toDataURL('image/jpeg', quality);
+    } catch { return dataURL; }
+}
+
+function getFilteredForExport() {
     const q = (document.querySelector('#search')?.value || '').trim().toLowerCase();
     const chipsEl = document.querySelector('#typeChips');
     const activeChip = chipsEl ? chipsEl.querySelector('.chip.selected') : null;
     const ft = activeChip ? activeChip.dataset.type : '';
-
-    const all = (JSON.parse(localStorage.getItem('wineLog.entries.v1') || '[]'))
+    const all = JSON.parse(localStorage.getItem('wineLog.entries.v1') || '[]');
+    return all
         .filter(e => {
             const matchQ = !q || (e.name?.toLowerCase().includes(q) || e.notes?.toLowerCase().includes(q));
             const matchT = !ft || e.type === ft;
             return matchQ && matchT;
         })
         .sort((a, b) => new Date(b.date) - new Date(a.date));
+}
 
-    const MAX_WIDTH = 1200;
-    const JPEG_QUALITY = 0.85;
-
-    const withPhotos = [];
-    for (const e of all) {
-        const out = { ...e };
-        if (out.photo) out.photo = await shrinkDataURL(out.photo, MAX_WIDTH, JPEG_QUALITY);
-        withPhotos.push(out);
+function forceDownload(filename, blob) {
+    // Create a persistent hidden anchor (Safari-friendly)
+    let a = document.getElementById('__dl_anchor__');
+    if (!a) {
+        a = document.createElement('a');
+        a.id = '__dl_anchor__';
+        a.style.display = 'none';
+        document.body.appendChild(a);
     }
-
-    const blob = new Blob([JSON.stringify(withPhotos, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'public-logs.json';
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = filename;
+    // Click synchronously in same task to avoid popup blockers
     a.click();
-    URL.revokeObjectURL(a.href);
+    // Cleanup shortly after
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+document.getElementById('exportPublic')?.addEventListener('click', async (ev) => {
+    const btn = ev.currentTarget;
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Preparing…';
+
+    try {
+        const source = getFilteredForExport();
+        const MAX_WIDTH = 1200, JPEG_QUALITY = 0.85;
+
+        // Include photos (lightly shrunk)
+        const out = [];
+        for (const e of source) {
+            const copy = { ...e };
+            if (copy.photo) copy.photo = await shrinkDataURL(copy.photo, MAX_WIDTH, JPEG_QUALITY);
+            out.push(copy);
+        }
+
+        const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+        forceDownload('public-logs.json', blob);
+
+        // Optional feedback
+        setTimeout(() => { btn.textContent = 'Exported ✓'; }, 50);
+    } catch (err) {
+        console.error(err);
+        alert('Export failed. Check the console for details.');
+    } finally {
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }, 700);
+    }
 });
 
 
