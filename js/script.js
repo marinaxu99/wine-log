@@ -350,6 +350,8 @@ function kv(label, value) {
 }
 
 function openDetail(id) {
+    $('#editEntry').style.display = '';
+    $('#deleteEntry').style.display = '';
     currentDetailId = id;
     const e = entries.find(x => x.id === id);
     if (!e) return;
@@ -701,33 +703,36 @@ async function loadPublicSnapshot() {
 function renderPublicList(entries) {
     const list = $('#publicLogList');
     list.innerHTML = '';
+
     if (!entries || !entries.length) {
         list.innerHTML = '<li class="row"><div class="meta">No entries yet.</div></li>';
         return;
     }
+
     entries
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .forEach(e => {
-            const li = document.createElement('li');
-            li.className = 'row';
+            const li = document.createElement('li'); // styled by .list li
 
-            const wrap = document.createElement('div');
-            wrap.style.display = 'grid';
-            wrap.style.gridTemplateColumns = e.photo ? '140px 1fr' : '1fr';
-            wrap.style.gap = '10px 16px';
-            wrap.style.alignItems = 'start';
+            const row = document.createElement('div');
+            row.className = 'row';
+            row.style.cursor = 'pointer';                // <— clickable
+            row.title = 'Open details';
 
+            const preview = document.createElement('div');
+            preview.className = 'preview';
+
+            const left = document.createElement('div');
             if (e.photo) {
                 const img = document.createElement('img');
+                img.className = 'thumb';
                 img.src = e.photo;
                 img.alt = 'photo';
-                img.style.maxWidth = '140px';
-                img.style.border = '1px solid var(--border)';
-                img.style.borderRadius = '12px';
-                wrap.appendChild(img);
+                left.appendChild(img);
             }
+            preview.appendChild(left);
 
-            const box = document.createElement('div');
+            const right = document.createElement('div');
             const title = document.createElement('div');
             title.className = 'title';
             title.textContent = e.name || '(no name)';
@@ -735,16 +740,23 @@ function renderPublicList(entries) {
             const meta = document.createElement('div');
             meta.className = 'meta';
             const dt = new Date(e.date).toLocaleString();
-            // If shortMeta exists (it does in your file), reuse it for consistency
-            const metaText = `${(e.type || '').toUpperCase()} • ${typeof shortMeta === 'function' ? shortMeta(e) : ''} • ${dt}`;
+            const metaText = (typeof shortMeta === 'function')
+                ? `${(e.type || '').toUpperCase()} • ${shortMeta(e)} • ${dt}`
+                : `${(e.type || '').toUpperCase()} • ${dt}`;
             meta.textContent = metaText;
 
-            box.append(title, meta);
-            wrap.appendChild(box);
-            li.appendChild(wrap);
+            right.append(title, meta);
+            preview.appendChild(right);
+
+            row.appendChild(preview);
+            li.appendChild(row);
             list.appendChild(li);
+
+            // OPEN READ-ONLY DETAIL ON CLICK
+            row.addEventListener('click', () => openPublicDetail(e));
         });
 }
+
 
 // ====== Export Public JSON (includes photos, lightly shrunk to keep size sane) ======
 async function shrinkDataURL(dataURL, maxW = 800, quality = 0.6) {
@@ -879,6 +891,39 @@ async function shrinkDataURL(dataURL, maxW = 800, quality = 0.7) {
         // If anything fails, just return the original
         return dataURL;
     }
+}
+
+function openPublicDetail(entry) {
+    // Build detail content using the same kv/markup as private detail
+    const art = $('#detailContent');
+    let html = `<h3>${entry.name || '(no name)'} — ${(entry.type || '').toUpperCase()}</h3><div class="kv">`;
+    html += kv('Appearance clarity', entry.appearance_clarity);
+    html += kv('Hue density', entry.hue_density);
+    html += kv('Hue', entry.hue);
+    html += kv('Smell intensity', entry.smell_intensity);
+    if (entry.type === 'white') html += kv('Smell descriptors: fresh fruit', entry.smell_fresh);
+    else html += kv('Smell descriptors: fruit', entry.smell_fruit_red);
+    html += kv('Smell descriptors (other)', [...(entry.smell_other || []), entry.smell_other_text].filter(Boolean));
+    html += kv('Sweetness', entry.sweetness);
+    html += kv('Sourness', entry.sourness);
+    html += kv('Bitterness', entry.bitterness);
+    html += kv('Astringency', entry.astringency);
+    if (entry.type === 'white') html += kv('Palate/finish — fresh fruit', entry.palate_fresh);
+    else html += kv('Palate/finish — fruit', entry.palate_fruit_red);
+    html += kv('Palate/finish (other)', [...(entry.palate_other || []), entry.palate_other_text].filter(Boolean));
+    html += kv('Body', entry.body);
+    html += kv('Texture', entry.texture);
+    html += kv('Balance', entry.balance);
+    html += kv('Finish', entry.finish);
+    html += kv('Side notes', entry.notes);
+    html += `</div>`;
+    if (entry.photo) html += `<img class="img-preview" src="${entry.photo}" alt="photo" />`;
+    art.innerHTML = html;
+
+    // Hide edit/delete (read-only mode)
+    $('#editEntry').style.display = 'none';
+    $('#deleteEntry').style.display = 'none';
+    $('#detailDialog').showModal();
 }
 
 
