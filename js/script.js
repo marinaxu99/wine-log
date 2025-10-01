@@ -160,9 +160,15 @@ async function collectForm(form, type) {
     entry.balance = fd.get('balance') || '';
     entry.finish = fd.get('finish') || '';
 
-    // Photo
+    // Photo (shrink before saving)
     const photoFile = fd.get('photo');
-    entry.photo = photoFile && photoFile.size ? await readFileAsDataURL(photoFile) : '';
+    if (photoFile && photoFile.size) {
+        const raw = await readFileAsDataURL(photoFile);
+        entry.photo = await shrinkDataURL(raw, 800, 0.7);
+    } else {
+        entry.photo = '';
+    }
+
 
     return entry;
 }
@@ -579,7 +585,9 @@ quickAddSave.addEventListener('click', async (ev) => {
         texture: '',
         balance: '',
         finish: '',
-        photo: photoFile && photoFile.size ? await readFileAsDataURL(photoFile) : '',
+        photo: photoFile && photoFile.size
+            ? await shrinkDataURL(await readFileAsDataURL(photoFile), 800, 0.7)
+            : '',
         likes: 0,
         liked: false
     };
@@ -692,7 +700,7 @@ function renderPublicList(entries) {
 }
 
 // ====== Export Public JSON (includes photos, lightly shrunk to keep size sane) ======
-async function shrinkDataURL(dataURL, maxW = 1200, quality = 0.85) {
+async function shrinkDataURL(dataURL, maxW = 800, quality = 0.6) {
     try {
         if (!dataURL || !dataURL.startsWith('data:image')) return dataURL;
         const img = new Image();
@@ -799,6 +807,32 @@ document.getElementById('exportPublic')?.addEventListener('click', async (ev) =>
     }
 });
 
+// ====== Photo shrink helper 
+async function shrinkDataURL(dataURL, maxW = 800, quality = 0.7) {
+    try {
+        if (!dataURL || !dataURL.startsWith('data:image')) return dataURL;
+        const img = new Image();
+        img.src = dataURL;
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+
+        const scale = Math.min(1, maxW / img.width);
+        if (scale >= 1) return dataURL; // already small enough
+
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+
+        // Export as JPEG to keep the size small
+        return c.toDataURL('image/jpeg', quality);
+    } catch {
+        // If anything fails, just return the original
+        return dataURL;
+    }
+}
 
 
 // ====== Init ======
