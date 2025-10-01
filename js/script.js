@@ -168,10 +168,11 @@ async function collectForm(form, type) {
     const photoFile = fd.get('photo');
     if (photoFile && photoFile.size) {
         const raw = await readFileAsDataURL(photoFile);
-        entry.photo = await shrinkDataURL(raw, 800, 0.7);
+        entry.photo = await shrinkDataURL(raw, { maxWidth: 900, maxBytes: 150 * 1024 });
     } else {
         entry.photo = '';
     }
+
 
 
     return entry;
@@ -465,7 +466,18 @@ $('#formWhite').addEventListener('submit', async (ev) => {
         entries.push({ ...data, likes: 0, liked: false, isPublic: false });
     }
 
-    saveEntries(entries);
+    try {
+        saveEntries(entries);
+    } catch (e) {
+        if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
+            alert('Storage is full. Try removing a few photos or shrinking them.');
+        } else {
+            console.error(e);
+            alert('Could not save. See console for details.');
+        }
+        return; // stop further code if save failed
+    }
+
     form.reset();
     renderList();
     updateTabCounts();
@@ -491,7 +503,18 @@ $('#formRed').addEventListener('submit', async (ev) => {
         entries.push({ ...data, likes: 0, liked: false, isPublic: false });
     }
 
-    saveEntries(entries);
+    try {
+        saveEntries(entries);
+    } catch (e) {
+        if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
+            alert('Storage is full. Try removing a few photos or shrinking them.');
+        } else {
+            console.error(e);
+            alert('Could not save. See console for details.');
+        }
+        return; // stop further code if save failed
+    }
+
     form.reset();
     renderList();
     updateTabCounts();
@@ -592,14 +615,25 @@ quickAddSave.addEventListener('click', async (ev) => {
         balance: '',
         finish: '',
         photo: photoFile && photoFile.size
-            ? await shrinkDataURL(await readFileAsDataURL(photoFile), 800, 0.7)
+            ? await shrinkDataURL(await readFileAsDataURL(photoFile), { maxWidth: 900, maxBytes: 150 * 1024 })
             : '',
         likes: 0,
         liked: false
     };
 
     entries.push(entry);
-    saveEntries(entries);
+    try {
+        saveEntries(entries);
+    } catch (e) {
+        if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
+            alert('Storage is full. Try removing a few photos or shrinking them.');
+        } else {
+            console.error(e);
+            alert('Could not save. See console for details.');
+        }
+        return; // stop further code if save failed
+    }
+
     renderList();
     updateTabCounts();
     quickAddDialog.close();
@@ -866,32 +900,42 @@ document.getElementById('exportPublic')?.addEventListener('click', async (ev) =>
     }
 });
 
-// ====== Photo shrink helper 
-async function shrinkDataURL(dataURL, maxW = 800, quality = 0.7) {
+// Shrink to max width and max bytes (loops quality down until under cap)
+async function shrinkDataURL(dataURL, {
+    maxWidth = 900,
+    startQuality = 0.8,
+    minQuality = 0.5,
+    maxBytes = 150 * 1024 // 150 KB target
+} = {}) {
     try {
         if (!dataURL || !dataURL.startsWith('data:image')) return dataURL;
+
         const img = new Image();
         img.src = dataURL;
         await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
 
-        const scale = Math.min(1, maxW / img.width);
-        if (scale >= 1) return dataURL; // already small enough
-
+        const scale = Math.min(1, maxWidth / img.width);
         const w = Math.round(img.width * scale);
         const h = Math.round(img.height * scale);
 
-        const c = document.createElement('canvas');
-        c.width = w; c.height = h;
-        const ctx = c.getContext('2d');
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d', { alpha: false });
         ctx.drawImage(img, 0, 0, w, h);
 
-        // Export as JPEG to keep the size small
-        return c.toDataURL('image/jpeg', quality);
+        let q = startQuality, out = canvas.toDataURL('image/jpeg', q);
+
+        // Loop down quality until <= maxBytes or reach minQuality
+        while ((out.length * 0.75) > maxBytes && q > minQuality) {
+            q = Math.max(minQuality, q - 0.05);
+            out = canvas.toDataURL('image/jpeg', q);
+        }
+        return out;
     } catch {
-        // If anything fails, just return the original
-        return dataURL;
+        return dataURL; // fail-safe
     }
 }
+
 
 function openPublicDetail(entry) {
     // Build detail content using the same kv/markup as private detail
