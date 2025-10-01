@@ -731,6 +731,12 @@ label.other-input {
     box-shadow: var(--shadow-1);
 }
 
+.iconbtn.publish[aria-pressed="true"] {
+    background: color-mix(in oklab, var(--primary) 20%, var(--card));
+    border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
+    box-shadow: var(--shadow-1);
+}
+
 .iconbtn.like .like-count {
     font: 600 11px/1 var(--font-sans);
     color: var(--muted);
