@@ -491,11 +491,9 @@ function switchTo(id) {
     $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
     $$('.tabpanel').forEach(p => p.classList.toggle('active', p.id === id));
     setLastTab(id);
-
-    if (id === 'publicView') {
-        loadPublicSnapshot();
-    }
+    if (id === 'publicView') loadPublicSnapshot();
 }
+
 
 // ====== Search / Filter / Clear ======
 searchEl.addEventListener('input', renderList);
@@ -627,6 +625,126 @@ function renderPublicList(entries) {
             list.appendChild(li);
         });
 }
+
+// ====== Public Logs (loader + renderer) ======
+async function loadPublicSnapshot() {
+    const list = $('#publicLogList');
+    if (!list) return;
+
+    list.innerHTML = '<li class="row"><div class="meta">Loading…</div></li>';
+    try {
+        const res = await fetch('data/public-logs.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error(res.status);
+        const entries = await res.json();
+        renderPublicList(entries);
+    } catch (err) {
+        console.warn('Public logs not available:', err);
+        list.innerHTML = '<li class="row"><div class="meta">No public logs found.</div></li>';
+    }
+}
+
+function renderPublicList(entries) {
+    const list = $('#publicLogList');
+    list.innerHTML = '';
+    if (!entries || !entries.length) {
+        list.innerHTML = '<li class="row"><div class="meta">No entries yet.</div></li>';
+        return;
+    }
+    entries
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .forEach(e => {
+            const li = document.createElement('li');
+            li.className = 'row';
+
+            const wrap = document.createElement('div');
+            wrap.style.display = 'grid';
+            wrap.style.gridTemplateColumns = e.photo ? '140px 1fr' : '1fr';
+            wrap.style.gap = '10px 16px';
+            wrap.style.alignItems = 'start';
+
+            if (e.photo) {
+                const img = document.createElement('img');
+                img.src = e.photo;
+                img.alt = 'photo';
+                img.style.maxWidth = '140px';
+                img.style.border = '1px solid var(--border)';
+                img.style.borderRadius = '12px';
+                wrap.appendChild(img);
+            }
+
+            const box = document.createElement('div');
+            const title = document.createElement('div');
+            title.className = 'title';
+            title.textContent = e.name || '(no name)';
+
+            const meta = document.createElement('div');
+            meta.className = 'meta';
+            const dt = new Date(e.date).toLocaleString();
+            // If shortMeta exists (it does in your file), reuse it for consistency
+            const metaText = `${(e.type || '').toUpperCase()} • ${typeof shortMeta === 'function' ? shortMeta(e) : ''} • ${dt}`;
+            meta.textContent = metaText;
+
+            box.append(title, meta);
+            wrap.appendChild(box);
+            li.appendChild(wrap);
+            list.appendChild(li);
+        });
+}
+
+// ====== Export Public JSON (includes photos, lightly shrunk to keep size sane) ======
+async function shrinkDataURL(dataURL, maxW = 1200, quality = 0.85) {
+    try {
+        if (!dataURL || !dataURL.startsWith('data:image')) return dataURL;
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = dataURL;
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+        const scale = Math.min(1, maxW / img.width);
+        if (scale >= 1) return dataURL; // already small enough
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        return c.toDataURL('image/jpeg', quality);
+    } catch {
+        return dataURL; // fail safe
+    }
+}
+
+document.getElementById('exportPublic')?.addEventListener('click', async () => {
+    // Build the same filtered set your Logs tab shows
+    const q = (document.querySelector('#search')?.value || '').trim().toLowerCase();
+    const chipsEl = document.querySelector('#typeChips');
+    const activeChip = chipsEl ? chipsEl.querySelector('.chip.selected') : null;
+    const ft = activeChip ? activeChip.dataset.type : '';
+
+    const all = (JSON.parse(localStorage.getItem('wineLog.entries.v1') || '[]'))
+        .filter(e => {
+            const matchQ = !q || (e.name?.toLowerCase().includes(q) || e.notes?.toLowerCase().includes(q));
+            const matchT = !ft || e.type === ft;
+            return matchQ && matchT;
+        })
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const MAX_WIDTH = 1200;
+    const JPEG_QUALITY = 0.85;
+
+    const withPhotos = [];
+    for (const e of all) {
+        const out = { ...e };
+        if (out.photo) out.photo = await shrinkDataURL(out.photo, MAX_WIDTH, JPEG_QUALITY);
+        withPhotos.push(out);
+    }
+
+    const blob = new Blob([JSON.stringify(withPhotos, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'public-logs.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+});
 
 
 
