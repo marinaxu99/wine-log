@@ -620,7 +620,8 @@ dialog::backdrop {
 #detailContent {
     padding: 18px;
     max-height: 72vh;
-    overflow: auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .dialog-actions {

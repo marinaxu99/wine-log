@@ -124,7 +124,7 @@ function getCheckedValues(inputs) {
 }
 
 // ====== Forms to JSON ======
-async function collectForm(form, type) {
+async function collectForm(form, type, existingPhoto = '') {
     const fd = new FormData(form);
     const entry = {
         id: uid(),
@@ -164,16 +164,17 @@ async function collectForm(form, type) {
     entry.balance = fd.get('balance') || '';
     entry.finish = fd.get('finish') || '';
 
+    const removeRequested = fd.get('remove_photo') === 'on';
     // Photo (shrink before saving)
     const photoFile = fd.get('photo');
-    if (photoFile && photoFile.size) {
+    if (removeRequested) {
+        entry.photo = '';
+    } else if (photoFile && photoFile.size) {
         const raw = await readFileAsDataURL(photoFile);
         entry.photo = await shrinkDataURL(raw, { maxWidth: 900, maxBytes: 150 * 1024 });
     } else {
-        entry.photo = '';
+        entry.photo = existingPhoto || '';
     }
-
-
 
     return entry;
 }
@@ -380,7 +381,14 @@ function openDetail(id) {
     html += `</div>`;
     if (e.photo) html += `<img class="img-preview" src="${e.photo}" alt="photo" />`;
     art.innerHTML = html;
-    $('#detailDialog').showModal();
+    const dlg = $('#detailDialog');
+    dlg.showModal();
+
+    // reset scroll to top
+    requestAnimationFrame(() => {
+        art.scrollTop = 0;
+        dlg.scrollTop = 0;
+    });
 }
 $('#closeDetail').addEventListener('click', () => $('#detailDialog').close());
 $('#deleteEntry').addEventListener('click', () => {
@@ -410,6 +418,7 @@ function startEdit(id) {
 function fillForm(e) {
     const form = e.type === 'white' ? $('#formWhite') : $('#formRed');
     form.reset();
+
     form.name.value = e.name || '';
     setRadio(form, 'appearance_clarity', e.appearance_clarity);
     setRadio(form, 'hue_density', e.hue_density);
@@ -437,8 +446,56 @@ function fillForm(e) {
     setRadio(form, 'finish', e.finish);
 
     form.notes.value = e.notes || '';
-    form.dataset.editId = e.id; // stash id for overwrite on submit
+
+    // --- Photo preview block (no duplicate IDs) ---
+    const fileInput = form.querySelector('input[name="photo"]');
+
+    // Container next to the file input
+    let holder = form.querySelector('[data-role="currentPhotoPreview"]');
+    if (!holder) {
+        holder = document.createElement('div');
+        holder.dataset.role = 'currentPhotoPreview';
+        holder.className = 'meta';
+        fileInput.closest('label').after(holder);
+    }
+
+    // Optional "remove photo" control
+    let removeWrap = form.querySelector('[data-role="removePhotoWrap"]');
+    if (!removeWrap) {
+        removeWrap = document.createElement('label');
+        removeWrap.dataset.role = 'removePhotoWrap';
+        removeWrap.style.display = 'inline-flex';
+        removeWrap.style.alignItems = 'center';
+        removeWrap.style.gap = '6px';
+        removeWrap.innerHTML = `<input type="checkbox" name="remove_photo"> Remove photo`;
+        holder.after(removeWrap);
+    }
+    // default unchecked each time we enter edit
+    const removeChk = form.querySelector('input[name="remove_photo"]');
+    removeChk.checked = false;
+
+    // Render current photo (if any)
+    const renderPreview = (src) => {
+        holder.innerHTML = src
+            ? `<img src="${src}" alt="current photo" style="max-width:160px;border:1px solid var(--border);border-radius:10px;margin-top:6px;">`
+            : `<span>No photo attached.</span>`;
+    };
+    renderPreview(e.photo || '');
+
+    // Live preview when user selects a new file
+    fileInput.onchange = async () => {
+        const f = fileInput.files?.[0];
+        if (!f) { renderPreview(e.photo || ''); return; }
+        const reader = new FileReader();
+        reader.onload = () => renderPreview(reader.result);
+        reader.readAsDataURL(f);
+        removeChk.checked = false; // picking a file implies "don’t remove"
+    };
+
+    form.dataset.editId = e.id;
 }
+
+
 function setRadio(form, name, value) {
     const el = $$(`input[name="${name}"]`, form).find(i => i.value === value);
     if (el) el.checked = true;
@@ -452,7 +509,8 @@ $('#formWhite').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const form = ev.currentTarget;
     const editingId = form.dataset.editId;
-    const data = await collectForm(form, 'white');
+    const existingPhoto = editingId ? (entries.find(e => e.id === editingId)?.photo || '') : '';
+    const data = await collectForm(form, 'white', existingPhoto);
 
     if (editingId) {
         const idx = entries.findIndex(e => e.id === editingId);
@@ -489,7 +547,8 @@ $('#formRed').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const form = ev.currentTarget;
     const editingId = form.dataset.editId;
-    const data = await collectForm(form, 'red');
+    const existingPhoto = editingId ? (entries.find(e => e.id === editingId)?.photo || '') : '';
+    const data = await collectForm(form, 'red', existingPhoto);
 
     if (editingId) {
         const idx = entries.findIndex(e => e.id === editingId);
@@ -852,7 +911,15 @@ function openPublicDetail(entry) {
     // Hide edit/delete (read-only mode)
     $('#editEntry').style.display = 'none';
     $('#deleteEntry').style.display = 'none';
-    $('#detailDialog').showModal();
+
+    const dlg = $('#detailDialog');
+    dlg.showModal();
+
+    // reset scroll to top
+    requestAnimationFrame(() => {
+        art.scrollTop = 0;
+        dlg.scrollTop = 0;
+    });
 }
 
 
