@@ -6,16 +6,21 @@ const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 function updateTopbarHeight() {
     const tb = document.querySelector('.topbar');
     if (!tb) return;
-    const h = tb.offsetHeight;
+    const h = tb.offsetHeight; // includes wrapping/rows
     document.documentElement.style.setProperty('--topbar-h', h + 'px');
 }
+// Recalculate on load, after fonts, and on resize/orientation changes
 window.addEventListener('load', updateTopbarHeight);
 window.addEventListener('resize', updateTopbarHeight);
 window.addEventListener('orientationchange', updateTopbarHeight);
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(updateTopbarHeight);
+// Font Loading API: recalc when fonts finish
+if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(updateTopbarHeight);
+}
+// Also run immediately
 updateTopbarHeight();
 
-// ====== Storage keys (UNCHANGED) ======
+// ====== Storage keys (UNCHANGED to preserve your data) ======
 const STORAGE_KEY = 'wineLog.entries.v1';
 const THEME_KEY = 'wineLog.theme';
 const LAST_NEW_TYPE = 'wineLog.lastNewType';
@@ -33,10 +38,13 @@ function uid() {
 }
 
 function setTheme(mode) {
-    document.documentElement.classList.toggle('dark', mode === 'dark');
+    const root = document.documentElement;
+    if (mode === 'dark') root.classList.add('dark');
+    else root.classList.remove('dark');
     localStorage.setItem(THEME_KEY, mode);
 }
 function getTheme() { return localStorage.getItem(THEME_KEY) || 'light'; }
+
 function setLastTab(id) { localStorage.setItem(LAST_TAB, id); }
 function getLastTab() { return localStorage.getItem(LAST_TAB) || 'whiteForm'; }
 function setLastNewType(t) { localStorage.setItem(LAST_NEW_TYPE, t); }
@@ -45,36 +53,53 @@ function getLastNewType() { return localStorage.getItem(LAST_NEW_TYPE) || 'white
 // ====== Tabs & Theme ======
 $$('.tab').forEach(btn => {
     btn.addEventListener('click', () => {
-        $$('.tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
-        btn.classList.add('active'); btn.setAttribute('aria-selected', 'true');
+        $$('.tab').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+
         const target = btn.dataset.tab;
         $$('.tabpanel').forEach(p => p.classList.remove('active'));
         $('#' + target).classList.add('active');
         setLastTab(target);
-        if (target === 'publicView') loadPublicSnapshot();
     });
 });
-(function initTab() { const t = getLastTab(); switchTo(t); })();
 
+// restore last tab on load
+(function initTab() {
+    const target = getLastTab();
+    switchTo(target);
+})();
+
+// theme toggle
 const themeBtn = $('#toggleTheme');
-function refreshThemeButton() { if (themeBtn) themeBtn.textContent = getTheme() === 'dark' ? '☀️' : '🌙'; }
-themeBtn?.addEventListener('click', () => { const next = getTheme() === 'dark' ? 'light' : 'dark'; setTheme(next); refreshThemeButton(); });
-setTheme(getTheme()); refreshThemeButton();
+function refreshThemeButton() {
+    themeBtn.textContent = getTheme() === 'dark' ? '☀️' : '🌙';
+}
+themeBtn.addEventListener('click', () => {
+    const next = getTheme() === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    refreshThemeButton();
+});
+setTheme(getTheme());
+refreshThemeButton();
 
 // ====== Data & State ======
 const listEl = $('#logList');
-const searchEl = $('#search');
-const globalSearchEl = $('#globalSearch');
+const searchEl = $('#search');        // logs-local search
+const globalSearchEl = $('#globalSearch');  // topbar global search
 const chipsEl = $('#typeChips');
 
 let entries = loadEntries();
 let currentDetailId = null;
 
-// ====== Migration: ensure new fields exist (non-destructive) ======
+// ====== Migration: ensure like fields exist (preserves existing data) ======
 entries = entries.map(e => ({
-    isPublic: false, likes: 0, liked: false,
+    likes: 0,
+    liked: false,
     ...e,
-    isPublic: typeof e.isPublic === 'boolean' ? e.isPublic : false,
     likes: typeof e.likes === 'number' ? e.likes : 0,
     liked: typeof e.liked === 'boolean' ? e.liked : false
 }));
@@ -90,71 +115,88 @@ async function readFileAsDataURL(file) {
         fr.readAsDataURL(file);
     });
 }
-function getCheckedValues(inputs) { return inputs.filter(i => i.checked).map(i => i.value); }
+function getCheckedValues(inputs) {
+    return inputs.filter(i => i.checked).map(i => i.value);
+}
 
 // ====== Forms to JSON ======
 async function collectForm(form, type) {
     const fd = new FormData(form);
     const entry = {
-        id: uid(), type, date: new Date().toISOString(),
+        id: uid(),
+        type,
+        date: new Date().toISOString(),
         name: (fd.get('name') || '').toString().trim(),
         notes: (fd.get('notes') || '').toString(),
     };
+
+    // Shared
     entry.appearance_clarity = fd.get('appearance_clarity') || '';
     entry.hue_density = fd.get('hue_density') || '';
     entry.hue = fd.get('hue') || '';
     entry.smell_intensity = fd.get('smell_intensity') || '';
 
+    // NOSE descriptors
     if (type === 'white') entry.smell_fresh = getCheckedValues($$('input[name="smell_fresh"]', form));
     else entry.smell_fruit_red = getCheckedValues($$('input[name="smell_fruit_red"]', form));
     entry.smell_other = getCheckedValues($$('input[name="smell_other"]', form));
     entry.smell_other_text = (fd.get('smell_other_text') || '').toString();
 
+    // PALATE basics
     entry.sweetness = fd.get('sweetness') || '';
     entry.sourness = fd.get('sourness') || '';
     entry.bitterness = fd.get('bitterness') || '';
     entry.astringency = fd.get('astringency') || '';
 
+    // PALATE descriptors
     if (type === 'white') entry.palate_fresh = getCheckedValues($$('input[name="palate_fresh"]', form));
     else entry.palate_fruit_red = getCheckedValues($$('input[name="palate_fruit_red"]', form));
     entry.palate_other = getCheckedValues($$('input[name="palate_other"]', form));
     entry.palate_other_text = (fd.get('palate_other_text') || '').toString();
 
+    // Structure
     entry.body = fd.get('body') || '';
     entry.texture = fd.get('texture') || '';
     entry.balance = fd.get('balance') || '';
     entry.finish = fd.get('finish') || '';
 
+    // Photo
     const photoFile = fd.get('photo');
     entry.photo = photoFile && photoFile.size ? await readFileAsDataURL(photoFile) : '';
 
-    // defaults
-    entry.likes = 0; entry.liked = false; entry.isPublic = false;
     return entry;
 }
 
 // ====== Rendering ======
-// Show SMELL • PALATE notes in the small meta line
+// NEW: concise smell + palate meta for the Logs row
 function shortMeta(e) {
     const take = (arr, n = 2) => (arr || []).filter(Boolean).slice(0, n);
-    const nose = e.type === 'white'
-        ? [...take(e.smell_fresh, 2), ...take(e.smell_other, 1)]
-        : [...take(e.smell_fruit_red, 2), ...take(e.smell_other, 1)];
+
+    // Build "nose" list
+    const nose =
+        e.type === 'white'
+            ? [...take(e.smell_fresh, 2), ...take(e.smell_other, 1)]
+            : [...take(e.smell_fruit_red, 2), ...take(e.smell_other, 1)];
     if (e.smell_other_text) nose.push(e.smell_other_text);
 
-    const palate = e.type === 'white'
-        ? [...take(e.palate_fresh, 2), ...take(e.palate_other, 1)]
-        : [...take(e.palate_fruit_red, 2), ...take(e.palate_other, 1)];
+    // Build "palate" list
+    const palate =
+        e.type === 'white'
+            ? [...take(e.palate_fresh, 2), ...take(e.palate_other, 1)]
+            : [...take(e.palate_fruit_red, 2), ...take(e.palate_other, 1)];
     if (e.palate_other_text) palate.push(e.palate_other_text);
 
-    const noseStr = (nose.filter(Boolean).slice(0, 3).join(', ') || '-');
-    const palateStr = (palate.filter(Boolean).slice(0, 3).join(', ') || '-');
+    const noseStr = nose.filter(Boolean).slice(0, 3).join(', ') || '-';
+    const palateStr = palate.filter(Boolean).slice(0, 3).join(', ') || '-';
+
+    // Example result: "cherry, blackberry • oak"
     return `${noseStr} • ${palateStr}`;
 }
 
 function renderList() {
-    const q = searchEl?.value.trim().toLowerCase() || '';
+    const q = searchEl.value.trim().toLowerCase();
     const ft = ($('.chip.selected', chipsEl) || {}).dataset?.type || '';
+
     const filtered = entries.filter(e => {
         const matchQ = !q || (e.name?.toLowerCase().includes(q) || e.notes?.toLowerCase().includes(q));
         const matchT = !ft || e.type === ft;
@@ -162,107 +204,105 @@ function renderList() {
     });
 
     listEl.innerHTML = '';
-    filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(e => {
-        const li = document.createElement('li');
+    filtered
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .forEach(e => {
+            const li = document.createElement('li');
 
-        // Row
-        const row = document.createElement('div');
-        row.className = 'row row-main';
+            // Row
+            const row = document.createElement('div');
+            row.className = 'row row-main';
 
-        const left = document.createElement('div');
-        const title = document.createElement('div');
-        title.className = 'title';
-        title.textContent = e.name || '(no name)';
+            const left = document.createElement('div');
+            const title = document.createElement('div');
+            title.className = 'title';
+            title.textContent = e.name || '(no name)';
 
-        const meta = document.createElement('div');
-        meta.className = 'meta';
-        const dt = new Date(e.date).toLocaleString();
-        meta.textContent = `${e.type.toUpperCase()} • ${shortMeta(e)} • ${dt}`;
-        left.appendChild(title); left.appendChild(meta);
+            const meta = document.createElement('div');
+            meta.className = 'meta';
+            const dt = new Date(e.date).toLocaleString();
+            meta.textContent = `${e.type.toUpperCase()} • ${shortMeta(e)} • ${dt}`;
 
-        const right = document.createElement('div');
-        right.className = 'row-actions';
+            left.appendChild(title);
+            left.appendChild(meta);
 
-        const btnOpen = document.createElement('button');
-        btnOpen.className = 'iconbtn'; btnOpen.title = 'Open detail'; btnOpen.textContent = '⤢';
+            const right = document.createElement('div');
+            right.className = 'row-actions';
 
-        const btnEdit = document.createElement('button');
-        btnEdit.className = 'iconbtn'; btnEdit.title = 'Edit'; btnEdit.textContent = '✎';
+            const btnOpen = document.createElement('button');
+            btnOpen.className = 'iconbtn';
+            btnOpen.title = 'Open detail';
+            btnOpen.textContent = '📂';
 
-        const btnDelete = document.createElement('button');
-        btnDelete.className = 'iconbtn'; btnDelete.title = 'Delete'; btnDelete.textContent = '🗑';
+            const btnEdit = document.createElement('button');
+            btnEdit.className = 'iconbtn';
+            btnEdit.title = 'Edit';
+            btnEdit.textContent = '✏️';
 
-        // NEW: Publish toggle
-        const btnPublish = document.createElement('button');
-        btnPublish.className = 'iconbtn publish';
-        btnPublish.title = 'Toggle public';
-        btnPublish.setAttribute('aria-pressed', e.isPublic ? 'true' : 'false');
-        btnPublish.textContent = '🌐';
+            const btnDelete = document.createElement('button');
+            btnDelete.className = 'iconbtn';
+            btnDelete.title = 'Delete';
+            btnDelete.textContent = '🗑';
 
-        // Like
-        const btnLike = document.createElement('button');
-        btnLike.className = 'iconbtn like';
-        btnLike.title = 'Like';
-        btnLike.setAttribute('aria-pressed', e.liked ? 'true' : 'false');
-        btnLike.innerHTML = (e.liked ? '♥' : '♡') + `<span class="like-count">${e.likes || 0}</span>`;
+            // Like button
+            const btnLike = document.createElement('button');
+            btnLike.className = 'iconbtn like';
+            btnLike.title = 'Like';
+            btnLike.setAttribute('aria-pressed', e.liked ? 'true' : 'false');
+            btnLike.innerHTML = (e.liked ? '♥' : '♡') + `<span class="like-count">${e.likes || 0}</span>`;
 
-        const chev = document.createElement('span');
-        chev.className = 'chev'; chev.textContent = '›';
+            const chev = document.createElement('span');
+            chev.className = 'chev';
+            chev.textContent = '›';
 
-        right.appendChild(btnOpen);
-        right.appendChild(btnEdit);
-        right.appendChild(btnDelete);
-        right.appendChild(btnPublish);
-        right.appendChild(btnLike);
-        right.appendChild(chev);
+            right.appendChild(btnOpen);
+            right.appendChild(btnEdit);
+            right.appendChild(btnDelete);
+            right.appendChild(btnLike);
+            right.appendChild(chev);
 
-        row.appendChild(left); row.appendChild(right);
+            row.appendChild(left);
+            row.appendChild(right);
 
-        const expand = document.createElement('div');
-        expand.className = 'row-expand';
-        expand.innerHTML = buildPreviewHTML(e);
+            // Inline expand preview
+            const expand = document.createElement('div');
+            expand.className = 'row-expand';
+            expand.innerHTML = buildPreviewHTML(e);
 
-        // Events
-        row.addEventListener('click', (ev) => {
-            if ([btnOpen, btnEdit, btnDelete, btnPublish, btnLike].some(b => ev.target === b || b.contains(ev.target))) return;
-            li.classList.toggle('expanded');
-            chev.textContent = li.classList.contains('expanded') ? '˅' : '›';
+            // Events
+            row.addEventListener('click', (ev) => {
+                if (ev.target === btnOpen || ev.target === btnEdit || ev.target === btnDelete || ev.target === btnLike || btnLike.contains(ev.target)) return;
+                li.classList.toggle('expanded');
+                chev.textContent = li.classList.contains('expanded') ? '˅' : '›';
+            });
+            btnOpen.addEventListener('click', (ev) => { ev.stopPropagation(); openDetail(e.id); });
+            btnEdit.addEventListener('click', (ev) => { ev.stopPropagation(); startEdit(e.id); });
+            btnDelete.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                if (confirm('Delete this entry?')) {
+                    entries = entries.filter(x => x.id !== e.id);
+                    saveEntries(entries);
+                    renderList();
+                    updateTabCounts();
+                }
+            });
+            btnLike.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                const idx = entries.findIndex(x => x.id === e.id);
+                if (idx < 0) return;
+                const curr = entries[idx];
+                const nextLiked = !curr.liked;
+                const nextLikes = Math.max(0, (curr.likes || 0) + (nextLiked ? 1 : -1));
+                entries[idx] = { ...curr, liked: nextLiked, likes: nextLikes };
+                saveEntries(entries);
+                btnLike.setAttribute('aria-pressed', nextLiked ? 'true' : 'false');
+                btnLike.innerHTML = (nextLiked ? '♥' : '♡') + `<span class="like-count">${nextLikes}</span>`;
+            });
+
+            li.appendChild(row);
+            li.appendChild(expand);
+            listEl.appendChild(li);
         });
-        btnOpen.addEventListener('click', (ev) => { ev.stopPropagation(); openDetail(e.id); });
-        btnEdit.addEventListener('click', (ev) => { ev.stopPropagation(); startEdit(e.id); });
-        btnDelete.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            if (confirm('Delete this entry?')) {
-                entries = entries.filter(x => x.id !== e.id);
-                saveEntries(entries); renderList(); updateTabCounts();
-            }
-        });
-        btnPublish.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            const idx = entries.findIndex(x => x.id === e.id);
-            if (idx < 0) return;
-            const next = !entries[idx].isPublic;
-            entries[idx] = { ...entries[idx], isPublic: next };
-            saveEntries(entries);
-            btnPublish.setAttribute('aria-pressed', next ? 'true' : 'false');
-        });
-        btnLike.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            const idx = entries.findIndex(x => x.id === e.id);
-            if (idx < 0) return;
-            const c = entries[idx];
-            const nextLiked = !c.liked;
-            const nextLikes = Math.max(0, (c.likes || 0) + (nextLiked ? 1 : -1));
-            entries[idx] = { ...c, liked: nextLiked, likes: nextLikes };
-            saveEntries(entries);
-            btnLike.setAttribute('aria-pressed', nextLiked ? 'true' : 'false');
-            btnLike.innerHTML = (nextLiked ? '♥' : '♡') + `<span class="like-count">${nextLikes}</span>`;
-        });
-
-        li.appendChild(row);
-        li.appendChild(expand);
-        listEl.appendChild(li);
-    });
 
     updateTabCounts();
 }
@@ -299,7 +339,6 @@ function kv(label, value) {
     return `<div class="k">${label}</div><div class="v">${safe(value)}</div>`;
 }
 
-// ====== Detail dialog ======
 function openDetail(id) {
     currentDetailId = id;
     const e = entries.find(x => x.id === id);
@@ -330,16 +369,19 @@ function openDetail(id) {
     art.innerHTML = html;
     $('#detailDialog').showModal();
 }
-$('#closeDetail')?.addEventListener('click', () => $('#detailDialog').close());
-$('#deleteEntry')?.addEventListener('click', () => {
+$('#closeDetail').addEventListener('click', () => $('#detailDialog').close());
+$('#deleteEntry').addEventListener('click', () => {
     if (!currentDetailId) return;
     entries = entries.filter(e => e.id !== currentDetailId);
-    saveEntries(entries); renderList(); updateTabCounts();
+    saveEntries(entries);
+    renderList();
+    updateTabCounts();
     $('#detailDialog').close();
 });
-$('#editEntry')?.addEventListener('click', () => {
+$('#editEntry').addEventListener('click', () => {
     if (!currentDetailId) return;
-    startEdit(currentDetailId); $('#detailDialog').close();
+    startEdit(currentDetailId);
+    $('#detailDialog').close();
 });
 
 function startEdit(id) {
@@ -351,6 +393,7 @@ function startEdit(id) {
     setLastTab(targetTab);
     fillForm(e);
 }
+
 function fillForm(e) {
     const form = e.type === 'white' ? $('#formWhite') : $('#formRed');
     form.reset();
@@ -381,7 +424,7 @@ function fillForm(e) {
     setRadio(form, 'finish', e.finish);
 
     form.notes.value = e.notes || '';
-    form.dataset.editId = e.id;
+    form.dataset.editId = e.id; // stash id for overwrite on submit
 }
 function setRadio(form, name, value) {
     const el = $$(`input[name="${name}"]`, form).find(i => i.value === value);
@@ -392,12 +435,15 @@ function setChecks(form, name, values) {
 }
 
 // ====== Submit Handlers ======
-$('#formWhite')?.addEventListener('submit', async (ev) => {
+$('#formWhite').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const form = ev.currentTarget;
     const editingId = form.dataset.editId;
     const data = await collectForm(form, 'white');
 
+    if (typeof data.likes !== 'number') data.likes = 0;
+    if (typeof data.liked !== 'boolean') data.liked = false;
+
     if (editingId) {
         data.id = editingId;
         const idx = entries.findIndex(e => e.id === editingId);
@@ -406,15 +452,22 @@ $('#formWhite')?.addEventListener('submit', async (ev) => {
     } else {
         entries.push(data);
     }
-    saveEntries(entries); form.reset(); renderList(); updateTabCounts(); switchTo('logsView');
+    saveEntries(entries);
+    form.reset();
+    renderList();
+    updateTabCounts();
+    switchTo('logsView');
 });
 
-$('#formRed')?.addEventListener('submit', async (ev) => {
+$('#formRed').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const form = ev.currentTarget;
     const editingId = form.dataset.editId;
     const data = await collectForm(form, 'red');
 
+    if (typeof data.likes !== 'number') data.likes = 0;
+    if (typeof data.liked !== 'boolean') data.liked = false;
+
     if (editingId) {
         data.id = editingId;
         const idx = entries.findIndex(e => e.id === editingId);
@@ -423,38 +476,53 @@ $('#formRed')?.addEventListener('submit', async (ev) => {
     } else {
         entries.push(data);
     }
-    saveEntries(entries); form.reset(); renderList(); updateTabCounts(); switchTo('logsView');
+    saveEntries(entries);
+    form.reset();
+    renderList();
+    updateTabCounts();
+    switchTo('logsView');
 });
 
 function switchTo(id) {
     $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
     $$('.tabpanel').forEach(p => p.classList.toggle('active', p.id === id));
     setLastTab(id);
-    if (id === 'publicView') loadPublicSnapshot();
 }
 
 // ====== Search / Filter / Clear ======
-searchEl?.addEventListener('input', renderList);
-chipsEl?.addEventListener('click', (e) => {
-    const btn = e.target.closest('.chip'); if (!btn) return;
+searchEl.addEventListener('input', renderList);
+
+// chips: type filter
+chipsEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip');
+    if (!btn) return;
     $$('.chip', chipsEl).forEach(c => c.classList.remove('selected'));
-    btn.classList.add('selected'); renderList();
+    btn.classList.add('selected');
+    renderList();
 });
-globalSearchEl?.addEventListener('keydown', (e) => {
+
+// topbar global search
+globalSearchEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
         switchTo('logsView');
-        if (searchEl) searchEl.value = globalSearchEl.value.trim();
+        searchEl.value = globalSearchEl.value.trim();
         renderList();
     }
 });
 document.addEventListener('keydown', (e) => {
     const tag = (document.activeElement?.tagName || '').toUpperCase();
-    if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA') { e.preventDefault(); globalSearchEl?.focus(); }
+    if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA') {
+        e.preventDefault();
+        globalSearchEl.focus();
+    }
 });
 
-$('#clearAll')?.addEventListener('click', () => {
+$('#clearAll').addEventListener('click', () => {
     if (confirm('Delete ALL entries? This cannot be undone.')) {
-        entries = []; saveEntries(entries); renderList(); updateTabCounts();
+        entries = [];
+        saveEntries(entries);
+        renderList();
+        updateTabCounts();
     }
 });
 
@@ -462,9 +530,9 @@ $('#clearAll')?.addEventListener('click', () => {
 function updateTabCounts() {
     const white = entries.filter(e => e.type === 'white').length;
     const red = entries.filter(e => e.type === 'red').length;
-    $('#countWhite')?.textContent = white;
-    $('#countRed')?.textContent = red;
-    $('#countAll')?.textContent = entries.length;
+    $('#countWhite').textContent = white;
+    $('#countRed').textContent = red;
+    $('#countAll').textContent = entries.length;
 }
 
 // ====== Quick Add ======
@@ -473,83 +541,66 @@ const quickAddForm = $('#quickAddForm');
 const quickAddSave = $('#quickAddSave');
 const fab = $('#fabQuickAdd');
 
-fab?.addEventListener('click', () => { quickAddForm.reset(); quickAddDialog.showModal(); });
-quickAddSave?.addEventListener('click', async (ev) => {
+fab.addEventListener('click', () => {
+    quickAddForm.reset();
+    quickAddDialog.showModal();
+});
+quickAddSave.addEventListener('click', async (ev) => {
     ev.preventDefault();
     const fd = new FormData(quickAddForm);
     const name = (fd.get('name') || '').toString().trim();
     const type = (fd.get('type') || 'white').toString();
-    if (!name) { alert('Please enter a name'); return; }
 
+    if (!name) {
+        alert('Please enter a name');
+        return;
+    }
     const photoFile = fd.get('photo');
     const entry = {
-        id: uid(), type, date: new Date().toISOString(), name, notes: '',
-        appearance_clarity: '', hue_density: '', hue: '', smell_intensity: '',
-        smell_fresh: [], smell_fruit_red: [], smell_other: [], smell_other_text: '',
-        sweetness: '', sourness: '', bitterness: '', astringency: '',
-        palate_fresh: [], palate_fruit_red: [], palate_other: [], palate_other_text: '',
-        body: '', texture: '', balance: '', finish: '', photo: photoFile && photoFile.size ? await readFileAsDataURL(photoFile) : '',
-        likes: 0, liked: false, isPublic: false
+        id: uid(),
+        type,
+        date: new Date().toISOString(),
+        name,
+        notes: '',
+        appearance_clarity: '',
+        hue_density: '',
+        hue: '',
+        smell_intensity: '',
+        smell_fresh: [],
+        smell_fruit_red: [],
+        smell_other: [],
+        smell_other_text: '',
+        sweetness: '',
+        sourness: '',
+        bitterness: '',
+        astringency: '',
+        palate_fresh: [],
+        palate_fruit_red: [],
+        palate_other: [],
+        palate_other_text: '',
+        body: '',
+        texture: '',
+        balance: '',
+        finish: '',
+        photo: photoFile && photoFile.size ? await readFileAsDataURL(photoFile) : '',
+        likes: 0,
+        liked: false
     };
-    entries.push(entry); saveEntries(entries); renderList(); updateTabCounts(); quickAddDialog.close();
-    setLastNewType(type); startEdit(entry.id);
+
+    entries.push(entry);
+    saveEntries(entries);
+    renderList();
+    updateTabCounts();
+    quickAddDialog.close();
+
+    // Jump user into full form for refinement
+    setLastNewType(type);
+    startEdit(entry.id);
 });
-
-// ====== Public tab: Export + Viewer ======
-$('#exportPublic')?.addEventListener('click', () => {
-    // set to false to omit photos and shrink file size
-    const INCLUDE_PHOTOS = true;
-    const pub = entries
-        .filter(e => e.isPublic)
-        .map(e => INCLUDE_PHOTOS ? e : ({ ...e, photo: '' }));
-    const data = JSON.stringify(pub, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'public-logs.json';
-    a.click();
-    URL.revokeObjectURL(a.href);
-});
-
-async function loadPublicSnapshot() {
-    const list = $('#publicList'); if (!list) return;
-    list.innerHTML = '';
-    const li = document.createElement('li');
-    li.className = 'row'; li.innerHTML = `<div class="meta">Loading…</div>`;
-    list.appendChild(li);
-
-    try {
-        const res = await fetch('/data/public-logs.json', { cache: 'no-store' });
-        if (!res.ok) throw new Error('not ok');
-        const data = await res.json();
-        list.innerHTML = '';
-        data.sort((a, b) => new Date(b.date) - new Date(a.date));
-        for (const e of data) {
-            const item = document.createElement('li');
-            const row = document.createElement('div'); row.className = 'row';
-            const title = document.createElement('div'); title.className = 'title'; title.textContent = e.name || '(no name)';
-            const meta = document.createElement('div'); meta.className = 'meta';
-            meta.textContent = `${(e.type || '').toUpperCase()} • ${shortMeta(e)} • ${new Date(e.date).toLocaleString()}`;
-            row.appendChild(title); row.appendChild(meta);
-            item.appendChild(row);
-            list.appendChild(item);
-        }
-        if (!data.length) {
-            const empty = document.createElement('li');
-            empty.className = 'row'; empty.innerHTML = `<div class="meta">No public logs yet.</div>`;
-            list.appendChild(empty);
-        }
-    } catch {
-        list.innerHTML = '';
-        const err = document.createElement('li');
-        err.className = 'row';
-        err.innerHTML = `<div class="meta">Couldn't load <code>/data/public-logs.json</code>. Make sure it exists and is valid JSON.</div>`;
-        list.appendChild(err);
-    }
-}
 
 // ====== Init ======
 function initChipsFromHash() {
+    // optional: restore type chip via hash like #type=red
     try {
         const params = new URLSearchParams(location.hash.replace(/^#/, ''));
         const t = params.get('type');
@@ -559,5 +610,5 @@ function initChipsFromHash() {
     } catch { }
 }
 initChipsFromHash();
-renderList(); updateTabCounts();
-if (getLastTab() === 'publicView') loadPublicSnapshot();
+renderList();
+updateTabCounts();
