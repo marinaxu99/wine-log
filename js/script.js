@@ -525,15 +525,6 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-$('#clearAll').addEventListener('click', () => {
-    if (confirm('Delete ALL entries? This cannot be undone.')) {
-        entries = [];
-        saveEntries(entries);
-        renderList();
-        updateTabCounts();
-    }
-});
-
 // ====== Count badges ======
 function updateTabCounts() {
     const white = entries.filter(e => e.type === 'white').length;
