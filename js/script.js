@@ -643,79 +643,6 @@ quickAddSave.addEventListener('click', async (ev) => {
     startEdit(entry.id);
 });
 
-// ====== Public Logs ======
-async function loadPublicSnapshot() {
-    try {
-        const res = await fetch('data/public-logs.json', { cache: 'no-store' });
-        if (!res.ok) throw new Error(res.status);
-        const entries = await res.json();
-        renderPublicList(entries);
-    } catch (err) {
-        console.warn('Public logs not available:', err);
-        $('#publicLogList').innerHTML =
-            '<li class="meta">No public logs found.</li>';
-    }
-}
-
-function renderPublicList(entries) {
-    const list = $('#publicLogList');
-    list.innerHTML = '';
-
-    if (!entries || !entries.length) {
-        list.innerHTML = '<li class="row"><div class="meta">No entries yet.</div></li>';
-        return;
-    }
-
-    entries
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .forEach(e => {
-            // Each item uses the same structure/classes as your Logs list
-            const li = document.createElement('li'); // styled by .list li
-
-            // Row container (same padding/shadow behavior)
-            const row = document.createElement('div');
-            row.className = 'row'; // reuse your .row styles
-            row.style.cursor = 'default'; // no expand/click
-
-            // Use the existing "preview" grid layout
-            const preview = document.createElement('div');
-            preview.className = 'preview';
-
-            // Left: thumbnail (same .thumb class as elsewhere)
-            const left = document.createElement('div');
-            if (e.photo) {
-                const img = document.createElement('img');
-                img.className = 'thumb';
-                img.src = e.photo;
-                img.alt = 'photo';
-                left.appendChild(img);
-            }
-            // If no photo, keep an empty div so grid spacing matches
-            preview.appendChild(left);
-
-            // Right: title + meta (reuse .title / .meta styles)
-            const right = document.createElement('div');
-            const title = document.createElement('div');
-            title.className = 'title';
-            title.textContent = e.name || '(no name)';
-
-            const meta = document.createElement('div');
-            meta.className = 'meta';
-            const dt = new Date(e.date).toLocaleString();
-            const metaText = (typeof shortMeta === 'function')
-                ? `${(e.type || '').toUpperCase()} • ${shortMeta(e)} • ${dt}`
-                : `${(e.type || '').toUpperCase()} • ${dt}`;
-            meta.textContent = metaText;
-
-            right.append(title, meta);
-            preview.appendChild(right);
-
-            row.appendChild(preview);
-            li.appendChild(row);
-            list.appendChild(li);
-        });
-}
-
 
 // ====== Public Logs (loader + renderer) ======
 async function loadPublicSnapshot() {
@@ -789,48 +716,6 @@ function renderPublicList(entries) {
             // OPEN READ-ONLY DETAIL ON CLICK
             row.addEventListener('click', () => openPublicDetail(e));
         });
-}
-
-
-// ====== Export Public JSON (includes photos, lightly shrunk to keep size sane) ======
-async function shrinkDataURL(dataURL, maxW = 800, quality = 0.6) {
-    try {
-        if (!dataURL || !dataURL.startsWith('data:image')) return dataURL;
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = dataURL;
-        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
-        const scale = Math.min(1, maxW / img.width);
-        if (scale >= 1) return dataURL; // already small enough
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-        const c = document.createElement('canvas');
-        c.width = w; c.height = h;
-        const ctx = c.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        return c.toDataURL('image/jpeg', quality);
-    } catch {
-        return dataURL; // fail safe
-    }
-}
-
-// ====== Export Public JSON (Safari-friendly, with photos) ======
-async function shrinkDataURL(dataURL, maxW = 1200, quality = 0.85) {
-    try {
-        if (!dataURL || !dataURL.startsWith('data:image')) return dataURL;
-        const img = new Image();
-        img.src = dataURL;
-        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
-        const scale = Math.min(1, maxW / img.width);
-        if (scale >= 1) return dataURL;
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-        const c = document.createElement('canvas');
-        c.width = w; c.height = h;
-        const ctx = c.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        return c.toDataURL('image/jpeg', quality);
-    } catch { return dataURL; }
 }
 
 function getFilteredForExport() {

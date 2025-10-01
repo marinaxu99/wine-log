@@ -471,16 +471,6 @@
 
             <ul id="logList" class="list"></ul>
         </div>
-
-        <!-- Inline detail still uses dialog when needed -->
-        <dialog id="detailDialog">
-            <article id="detailContent"></article>
-            <footer class="dialog-actions">
-                <button id="editEntry" class="primary">Edit</button>
-                <button id="deleteEntry" class="danger">Delete</button>
-                <button id="closeDetail" class="ghost">Close</button>
-            </footer>
-        </dialog>
     </section>
 
     <section id="publicView" class="tabpanel" role="tabpanel" aria-labelledby="tab-public">
@@ -526,6 +516,16 @@
 
     <!-- (1/8) Mobile FAB for Quick Add -->
     <button id="fabQuickAdd" class="fab" aria-label="Quick add">＋</button>
+
+    <!-- Inline detail still uses dialog when needed -->
+    <dialog id="detailDialog">
+        <article id="detailContent"></article>
+        <footer class="dialog-actions">
+            <button id="editEntry" class="primary">Edit</button>
+            <button id="deleteEntry" class="danger">Delete</button>
+            <button id="closeDetail" class="ghost">Close</button>
+        </footer>
+    </dialog>
 
     <script src="js/script.js" defer></script>
 </body>
