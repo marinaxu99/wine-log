@@ -441,23 +441,25 @@ $('#formWhite').addEventListener('submit', async (ev) => {
     const editingId = form.dataset.editId;
     const data = await collectForm(form, 'white');
 
-    if (typeof data.likes !== 'number') data.likes = 0;
-    if (typeof data.liked !== 'boolean') data.liked = false;
-
     if (editingId) {
-        data.id = editingId;
         const idx = entries.findIndex(e => e.id === editingId);
-        if (idx >= 0) entries[idx] = { ...entries[idx], ...data, id: editingId };
+        if (idx >= 0) {
+            // preserve likes/liked/isPublic from existing record
+            entries[idx] = { ...entries[idx], ...data, id: editingId };
+        }
         form.dataset.editId = '';
     } else {
-        entries.push(data);
+        // NEW entry: set defaults once
+        entries.push({ ...data, likes: 0, liked: false, isPublic: false });
     }
+
     saveEntries(entries);
     form.reset();
     renderList();
     updateTabCounts();
     switchTo('logsView');
 });
+
 
 $('#formRed').addEventListener('submit', async (ev) => {
     ev.preventDefault();
@@ -465,23 +467,25 @@ $('#formRed').addEventListener('submit', async (ev) => {
     const editingId = form.dataset.editId;
     const data = await collectForm(form, 'red');
 
-    if (typeof data.likes !== 'number') data.likes = 0;
-    if (typeof data.liked !== 'boolean') data.liked = false;
-
     if (editingId) {
-        data.id = editingId;
         const idx = entries.findIndex(e => e.id === editingId);
-        if (idx >= 0) entries[idx] = { ...entries[idx], ...data, id: editingId };
+        if (idx >= 0) {
+            // preserve likes/liked/isPublic from existing record
+            entries[idx] = { ...entries[idx], ...data, id: editingId };
+        }
         form.dataset.editId = '';
     } else {
-        entries.push(data);
+        // NEW entry: set defaults once
+        entries.push({ ...data, likes: 0, liked: false, isPublic: false });
     }
+
     saveEntries(entries);
     form.reset();
     renderList();
     updateTabCounts();
     switchTo('logsView');
 });
+
 
 function switchTo(id) {
     $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
