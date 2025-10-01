@@ -54,7 +54,10 @@
         <button class="tab" data-tab="logsView" role="tab" aria-selected="false">
             Logs <span class="badge" id="countAll">0</span>
         </button>
-        <button class="tab" data-tab="publicView" role="tab" aria-selected="false">Public</button>
+        <button class="tab" data-tab="publicView" role="tab" aria-selected="false">
+            Public
+        </button>
+
     </nav>
 
     <!-- WHITE WINE FORM -->
@@ -481,17 +484,10 @@
         </dialog>
     </section>
 
-    <!--public tabpanel-->
     <section id="publicView" class="tabpanel" role="tabpanel" aria-labelledby="tab-public">
         <div class="card">
-            <h2>Public Pool</h2>
-            <p class="meta">This view loads a static snapshot from <code>/data/public-logs.json</code>.</p>
-            <div class="toolbar">
-                <button id="exportPublic" class="primary">Export Public JSON</button>
-                <div class="spacer"></div>
-                <a class="mono" href="/data/public-logs.json" target="_blank" rel="noopener">View current JSON</a>
-            </div>
-            <ul id="publicList" class="list"></ul>
+            <h2>Public Logs</h2>
+            <ul id="publicLogList" class="list"></ul>
         </div>
     </section>
 
