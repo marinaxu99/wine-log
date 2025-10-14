@@ -174,14 +174,50 @@ code,
     position: sticky;
     top: 0;
     z-index: 3;
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    gap: 12px;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 14px;
     padding: 14px 18px;
     background: color-mix(in oklab, var(--bg) 72%, #ffffff 28%);
     backdrop-filter: saturate(1.2) blur(6px);
     border-bottom: 1px solid var(--border);
+    flex-wrap: nowrap;
+    /* keeps all items on the same row */
+}
+
+.topbar h1 {
+    flex: 0 0 auto;
+    margin: 0;
+    font: 700 18px/1 var(--font-head);
+    letter-spacing: .2px;
+    white-space: nowrap;
+}
+
+.topbar-search {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    max-width: 600px;
+}
+
+.topbar-actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* smaller screens: let the search shrink gracefully but stay inline */
+@media (max-width: 600px) {
+    .topbar {
+        gap: 8px;
+        padding: 12px;
+    }
+
+    .topbar-search input {
+        min-width: 120px;
+    }
 }
 
 .topbar h1 {
