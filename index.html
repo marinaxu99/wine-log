@@ -28,16 +28,6 @@
         </div>
 
         <div class="topbar-actions">
-            <!-- (1) New Entry split button -->
-            <div class="split">
-                <button id="newEntryMain" class="primary">+ New Entry</button>
-                <button id="newEntryMenuBtn" class="caret" aria-haspopup="true" aria-expanded="false">▾</button>
-                <div id="newEntryMenu" class="menu" role="menu" aria-hidden="true">
-                    <button class="menuitem" data-newtype="white" role="menuitem">New White</button>
-                    <button class="menuitem" data-newtype="red" role="menuitem">New Red</button>
-                </div>
-            </div>
-
             <!-- Theme toggle -->
             <button id="toggleTheme" class="ghost" aria-label="Toggle theme">🌙</button>
         </div>
@@ -514,8 +504,8 @@
         </form>
     </dialog>
 
-    <!-- (1/8) Mobile FAB for Quick Add -->
-    <button id="fabQuickAdd" class="fab" aria-label="Quick add">＋</button>
+    <!-- Floating action button becomes chat opener -->
+    <button id="fabQuickAdd" class="fab" aria-label="Open AI chat">💬</button>
 
     <!-- Inline detail still uses dialog when needed -->
     <dialog id="detailDialog">
@@ -526,6 +516,32 @@
             <button id="closeDetail" class="ghost">Close</button>
         </footer>
     </dialog>
+
+    <!-- AI Chat (Gemini) -->
+    <dialog id="chatDialog">
+        <form method="dialog" class="card chat">
+            <header class="chat-header">
+                <div class="chat-title">
+                    <strong>Vocab Coach</strong>
+                    <span class="meta">Gemini</span>
+                </div>
+                <div class="chat-tools">
+                    <input id="geminiKey" type="password" placeholder="Gemini API Key" aria-label="Gemini API Key" />
+                    <button id="saveGeminiKey" type="button" class="ghost">Save</button>
+                    <button value="close" class="ghost" aria-label="Close">✕</button>
+                </div>
+            </header>
+
+            <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+
+            <div class="chat-input">
+                <textarea id="chatInput" rows="2"
+                    placeholder="Ask a wine/vocab question… (Shift+Enter = newline)"></textarea>
+                <button id="chatSend" type="button" class="primary">Send</button>
+            </div>
+        </form>
+    </dialog>
+
 
     <script src="js/script.js" defer></script>
 </body>

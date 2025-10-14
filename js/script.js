@@ -626,81 +626,177 @@ function updateTabCounts() {
     $('#countAll').textContent = entries.length;
 }
 
-// ====== Quick Add ======
-const quickAddDialog = $('#quickAddDialog');
-const quickAddForm = $('#quickAddForm');
-const quickAddSave = $('#quickAddSave');
-const fab = $('#fabQuickAdd');
+// ====== Chat (replaces old Quick Add FAB behavior) ======
+const chatDialog = document.getElementById('chatDialog');
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const chatSend = document.getElementById('chatSend');
+const fabChat = document.getElementById('fabQuickAdd');
 
-fab.addEventListener('click', () => {
-    quickAddForm.reset();
-    quickAddDialog.showModal();
+const geminiKeyInput = document.getElementById('geminiKey');
+const saveGeminiKeyBtn = document.getElementById('saveGeminiKey');
+
+// simple rolling history
+let chatHistory = [];
+
+// load stored key into the input
+(function initGeminiKey() {
+    const k = getGeminiKey();
+    if (k) geminiKeyInput.value = k;
+})();
+
+function appendMessage(role, text) {
+    // role: 'user' | 'model'
+    chatHistory.push({ role, text });
+
+    const wrap = document.createElement('div');
+    wrap.className = 'bubble';
+
+    const who = document.createElement('div');
+    who.className = 'who';
+    who.textContent = role === 'user' ? 'You' : 'Gemini';
+
+    const msg = document.createElement('div');
+    msg.className = `msg ${role === 'user' ? 'user' : 'bot'}`;
+    msg.textContent = text;
+
+    wrap.appendChild(who);
+    wrap.appendChild(msg);
+    chatMessages.appendChild(wrap);
+
+    // autoscroll
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function setSending(disabled) {
+    chatSend.disabled = disabled;
+    chatInput.disabled = disabled;
+}
+
+fabChat?.addEventListener('click', () => {
+    // show modal; clear ephemeral placeholders
+    if (!chatDialog.open) chatDialog.showModal();
+    // focus input
+    setTimeout(() => chatInput.focus(), 50);
 });
-quickAddSave.addEventListener('click', async (ev) => {
-    ev.preventDefault();
-    const fd = new FormData(quickAddForm);
-    const name = (fd.get('name') || '').toString().trim();
-    const type = (fd.get('type') || 'white').toString();
 
-    if (!name) {
-        alert('Please enter a name');
+saveGeminiKeyBtn?.addEventListener('click', () => {
+    setGeminiKey(geminiKeyInput.value.trim());
+    saveGeminiKeyBtn.textContent = 'Saved ✓';
+    setTimeout(() => (saveGeminiKeyBtn.textContent = 'Save'), 800);
+});
+
+chatSend?.addEventListener('click', async () => {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    const key = geminiKeyInput.value.trim() || getGeminiKey();
+    if (!key) {
+        alert('Please paste your Gemini API key.');
+        geminiKeyInput.focus();
         return;
     }
-    const photoFile = fd.get('photo');
-    const entry = {
-        id: uid(),
-        type,
-        date: new Date().toISOString(),
-        name,
-        notes: '',
-        appearance_clarity: '',
-        hue_density: '',
-        hue: '',
-        smell_intensity: '',
-        smell_fresh: [],
-        smell_fruit_red: [],
-        smell_other: [],
-        smell_other_text: '',
-        sweetness: '',
-        sourness: '',
-        bitterness: '',
-        astringency: '',
-        palate_fresh: [],
-        palate_fruit_red: [],
-        palate_other: [],
-        palate_other_text: '',
-        body: '',
-        texture: '',
-        balance: '',
-        finish: '',
-        photo: photoFile && photoFile.size
-            ? await shrinkDataURL(await readFileAsDataURL(photoFile), { maxWidth: 900, maxBytes: 150 * 1024 })
-            : '',
-        likes: 0,
-        liked: false
+
+    appendMessage('user', text);
+    chatInput.value = '';
+    setSending(true);
+
+    try {
+        const reply = await callGemini({
+            apiKey: key,
+            history: chatHistory.slice(-10), // keep last 10 turns
+            userText: text
+        });
+        appendMessage('model', reply);
+    } catch (err) {
+        console.error(err);
+        appendMessage('model', 'Oops — I couldn’t reach Gemini. Check your key or try again.');
+    } finally {
+        setSending(false);
+        chatInput.focus();
+    }
+});
+
+// Enter to send (Shift+Enter for newline)
+chatInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        chatSend.click();
+    }
+});
+
+
+// ====== Gemini helpers (client-side; for personal use) ======
+const GEMINI_KEY_STORAGE = 'wineLog.gemini.key';
+const GEMINI_MODEL = 'gemini-1.5-flash-latest'; // fast & inexpensive; switch to 1.5-pro for deeper reasoning
+
+function getGeminiKey() {
+    return localStorage.getItem(GEMINI_KEY_STORAGE) || '';
+}
+function setGeminiKey(k) {
+    localStorage.setItem(GEMINI_KEY_STORAGE, k || '');
+}
+
+function geminiHeaders() {
+    return { 'Content-Type': 'application/json' };
+}
+
+// Build a conversation into Gemini's "contents" format.
+// We keep a short rolling history for context.
+function toGeminiContents(history) {
+    // history items: {role: 'user'|'model', text: string}
+    return history.map(m => ({
+        role: m.role === 'model' ? 'model' : 'user',
+        parts: [{ text: m.text }]
+    }));
+}
+
+async function callGemini({ apiKey, history, userText }) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+    // System style prompt: specialize to wine tasting & general vocab coaching.
+    const systemInstruction = {
+        role: 'system',
+        parts: [{
+            text: [
+                'You are a concise vocabulary coach for wine tasting and general English.',
+                'When asked about wine notes (e.g., oak, vanilla, lees, malolactic),',
+                'give short definitions + 1–2 usage examples in tasting context.',
+                'If asked non-wine vocab, still answer concisely with plain-English examples.',
+                'Prefer bullet points when it improves clarity. Keep answers compact.'
+            ].join(' ')
+        }]
     };
 
-    entries.push(entry);
-    try {
-        saveEntries(entries);
-    } catch (e) {
-        if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
-            alert('Storage is full. Try removing a few photos or shrinking them.');
-        } else {
-            console.error(e);
-            alert('Could not save. See console for details.');
+    const contents = toGeminiContents(history.concat([{ role: 'user', text: userText }]));
+
+    const body = {
+        system_instruction: systemInstruction,
+        contents,
+        generationConfig: {
+            temperature: 0.5,
+            maxOutputTokens: 512
         }
-        return; // stop further code if save failed
+    };
+
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: geminiHeaders(),
+        body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        throw new Error(`Gemini error ${res.status}: ${txt || res.statusText}`);
     }
 
-    renderList();
-    updateTabCounts();
-    quickAddDialog.close();
+    const data = await res.json();
+    const cand = data?.candidates?.[0];
+    const parts = cand?.content?.parts || [];
+    const text = parts.map(p => p.text).join('\n').trim();
+    return text || '(no response)';
+}
 
-    // Jump user into full form for refinement
-    setLastNewType(type);
-    startEdit(entry.id);
-});
 
 
 // ====== Public Logs (loader + renderer) ======
