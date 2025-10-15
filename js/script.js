@@ -74,10 +74,12 @@ $$('.tab').forEach(btn => {
 });
 
 (function initTab() {
-    const target = getLastTab();
+    const target = getLastTab() || 'logsView';
     switchTo(target);
     if (target === 'publicView') loadPublicSnapshot();
+    if (target === 'logsView') renderList();
 })();
+
 
 
 // theme toggle
@@ -589,6 +591,12 @@ function switchTo(id) {
     $$('.tabpanel').forEach(p => p.classList.toggle('active', p.id === id));
     setLastTab(id);
     if (id === 'publicView') loadPublicSnapshot();
+
+    // 🔧 NEW: re-render when switching to Logs tab
+    if (id === 'logsView') {
+        entries = loadEntries();  // re-read from storage just in case
+        renderList();
+    }
 }
 
 
@@ -1013,10 +1021,11 @@ function initChipsFromHash() {
         const params = new URLSearchParams(location.hash.replace(/^#/, ''));
         const t = params.get('type');
         if (t === 'white' || t === 'red' || t === '') {
-            $$('.chip', chipsEl).forEach(c => c.classList.toggle('selected', c.dataset.type === (t ?? '')));
+            $$('.chip', chipsEl).forEach(c =>
+                c.classList.toggle('selected', c.dataset.type === (t ?? ''))
+            );
         }
     } catch { }
 }
+
 initChipsFromHash();
-renderList();
-updateTabCounts();
