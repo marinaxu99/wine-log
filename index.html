@@ -522,12 +522,10 @@
         <form method="dialog" class="card chat">
             <header class="chat-header">
                 <div class="chat-title">
-                    <strong>Vocab Coach</strong>
-                    <span class="meta">Gemini</span>
+                    <strong>AI Chat</strong>
+                    <span class="meta">about wine</span>
                 </div>
                 <div class="chat-tools">
-                    <input id="geminiKey" type="password" placeholder="Gemini API Key" aria-label="Gemini API Key" />
-                    <button id="saveGeminiKey" type="button" class="ghost">Save</button>
                     <button value="close" class="ghost" aria-label="Close">✕</button>
                 </div>
             </header>
@@ -535,8 +533,7 @@
             <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
 
             <div class="chat-input">
-                <textarea id="chatInput" rows="2"
-                    placeholder="Ask a wine/vocab question… (Shift+Enter = newline)"></textarea>
+                <textarea id="chatInput" rows="2" placeholder="any wine-related question…"></textarea>
                 <button id="chatSend" type="button" class="primary">Send</button>
             </div>
         </form>
