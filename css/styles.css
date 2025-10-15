@@ -920,3 +920,19 @@ label.other-input {
     display: flex !important;
     flex-direction: column;
 }
+
+#chatDialog[open] {
+    animation: chatSlideUp 0.25s ease;
+}
+
+@keyframes chatSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

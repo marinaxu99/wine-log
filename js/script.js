@@ -631,20 +631,28 @@ function updateTabCounts() {
 
 // ====== Chat (replaces old Quick Add FAB behavior) ======
 
-// Prevent <dialog> default centering behavior
-const chatDialog = document.getElementById('chatDialog');
-chatDialog.showModal = function () {
-    this.setAttribute('open', '');
-};
-chatDialog.close = function () {
-    this.removeAttribute('open');
-};
-
-const chatDialog = document.getElementById('chatDialog');
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 const chatSend = document.getElementById('chatSend');
-const fabChat = document.getElementById('fabQuickAdd');
+
+// === Floating Chat Bubble toggle ===
+const fabQuickAdd = document.getElementById('fabQuickAdd');
+const chatDialog = document.getElementById('chatDialog');
+
+// helper: toggle open attribute (since <dialog> showModal is disabled)
+fabQuickAdd.addEventListener('click', () => {
+    if (chatDialog.hasAttribute('open')) {
+        chatDialog.removeAttribute('open');
+    } else {
+        chatDialog.setAttribute('open', '');
+    }
+});
+
+// close button inside chat
+chatDialog.querySelector('button[value="close"]').addEventListener('click', () => {
+    chatDialog.removeAttribute('open');
+});
+
 
 
 // simple rolling history
