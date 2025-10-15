@@ -630,6 +630,16 @@ function updateTabCounts() {
 }
 
 // ====== Chat (replaces old Quick Add FAB behavior) ======
+
+// Prevent <dialog> default centering behavior
+const chatDialog = document.getElementById('chatDialog');
+chatDialog.showModal = function () {
+    this.setAttribute('open', '');
+};
+chatDialog.close = function () {
+    this.removeAttribute('open');
+};
+
 const chatDialog = document.getElementById('chatDialog');
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');

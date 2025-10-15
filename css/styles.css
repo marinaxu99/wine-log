@@ -889,3 +889,34 @@ label.other-input {
     font: 600 11px/1 var(--font-sans);
     color: var(--muted);
 }
+
+/* ----- FIX: make the AI chat stay in the corner ----- */
+#chatDialog::backdrop {
+    background: transparent;
+    /* remove dark overlay */
+}
+
+#chatDialog {
+    position: fixed !important;
+    inset: auto !important;
+    bottom: 90px !important;
+    right: 24px !important;
+    transform: none !important;
+    translate: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 360px;
+    max-height: 70vh;
+    border: none;
+    border-radius: var(--radius);
+    background: color-mix(in oklab, var(--card) 94%, var(--primary-weak) 6%);
+    box-shadow: var(--shadow-2);
+    display: none;
+    overflow: hidden;
+    z-index: 9999;
+}
+
+#chatDialog[open] {
+    display: flex !important;
+    flex-direction: column;
+}
