@@ -8,6 +8,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap"
         rel="stylesheet">
+
     <link rel="stylesheet" href="css/styles.css" />
 </head>
 
@@ -21,7 +22,7 @@
     <header class="topbar">
         <h1>Wine Log</h1>
 
-        <!-- Global search -->
+        <!-- Global search (3) -->
         <div class="topbar-search">
             <input id="globalSearch" type="search" placeholder="Search name or notes…" aria-label="Global search" />
         </div>
@@ -32,7 +33,7 @@
         </div>
     </header>
 
-    <!-- Tabs with count badges -->
+    <!-- Tabs with count badges (2) -->
     <nav class="tabs" role="tablist">
         <button class="tab active" data-tab="whiteForm" role="tab" aria-selected="true">
             White <span class="badge" id="countWhite">0</span>
@@ -46,6 +47,7 @@
         <button class="tab" data-tab="publicView" role="tab" aria-selected="false">
             Public
         </button>
+
     </nav>
 
     <!-- WHITE WINE FORM -->
@@ -125,6 +127,7 @@
                                 other:
                                 <input type="text" name="smell_other_text" placeholder="type…" />
                             </label>
+
                         </fieldset>
                     </div>
                 </fieldset>
@@ -155,6 +158,7 @@
                             <label><input type="radio" name="bitterness" value="slightly bitter" /> slightly
                                 bitter</label>
                             <label><input type="radio" name="bitterness" value="bitter" /> bitter</label>
+                            <label><input type="radio" name="bitterness" value="very bitter" /> very bitter</label>
                         </fieldset>
 
                         <fieldset>
@@ -442,6 +446,7 @@
         <div class="card">
             <h2>All Logs</h2>
 
+            <!-- (4) Filter chips -->
             <div class="toolbar">
                 <div class="chips" id="typeChips" role="group" aria-label="Type filter">
                     <button class="chip selected" data-type="">All</button>
@@ -449,6 +454,7 @@
                     <button class="chip" data-type="red">Red</button>
                 </div>
 
+                <!-- local search still here for refinement -->
                 <input id="search" type="search" placeholder="Search within logs…" />
                 <div class="spacer"></div>
             </div>
@@ -469,7 +475,8 @@
         </div>
     </section>
 
-    <!-- (optional) legacy Quick Add dialog can remain or be removed -->
+
+    <!-- (8) Quick Add dialog (also used by mobile FAB) -->
     <dialog id="quickAddDialog">
         <form id="quickAddForm" method="dialog" class="card quickadd">
             <h3>Quick Add</h3>
@@ -497,10 +504,10 @@
         </form>
     </dialog>
 
-    <!-- Floating action button opens chat -->
+    <!-- Floating action button becomes chat opener -->
     <button id="fabQuickAdd" class="fab" aria-label="Open AI chat">💬</button>
 
-    <!-- Inline detail dialog -->
+    <!-- Inline detail still uses dialog when needed -->
     <dialog id="detailDialog">
         <article id="detailContent"></article>
         <footer class="dialog-actions">
@@ -510,15 +517,19 @@
         </footer>
     </dialog>
 
-    <!-- Clean AI Chat (no API key UI) -->
+    <!-- AI Chat (Gemini) -->
     <dialog id="chatDialog">
         <form method="dialog" class="card chat">
             <header class="chat-header">
                 <div class="chat-title">
                     <strong>Vocab Coach</strong>
-                    <span class="meta">Quick Q → A</span>
+                    <span class="meta">Gemini</span>
                 </div>
-                <button value="close" class="ghost" aria-label="Close">✕</button>
+                <div class="chat-tools">
+                    <input id="geminiKey" type="password" placeholder="Gemini API Key" aria-label="Gemini API Key" />
+                    <button id="saveGeminiKey" type="button" class="ghost">Save</button>
+                    <button value="close" class="ghost" aria-label="Close">✕</button>
+                </div>
             </header>
 
             <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
@@ -530,6 +541,7 @@
             </div>
         </form>
     </dialog>
+
 
     <script src="js/script.js" defer></script>
 </body>

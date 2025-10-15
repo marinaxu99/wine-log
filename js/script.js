@@ -74,12 +74,10 @@ $$('.tab').forEach(btn => {
 });
 
 (function initTab() {
-    const target = getLastTab() || 'logsView';
+    const target = getLastTab();
     switchTo(target);
     if (target === 'publicView') loadPublicSnapshot();
-    if (target === 'logsView') renderList();
 })();
-
 
 
 // theme toggle
@@ -591,12 +589,6 @@ function switchTo(id) {
     $$('.tabpanel').forEach(p => p.classList.toggle('active', p.id === id));
     setLastTab(id);
     if (id === 'publicView') loadPublicSnapshot();
-
-    // 🔧 NEW: re-render when switching to Logs tab
-    if (id === 'logsView') {
-        entries = loadEntries();  // re-read from storage just in case
-        renderList();
-    }
 }
 
 
@@ -638,29 +630,11 @@ function updateTabCounts() {
 }
 
 // ====== Chat (replaces old Quick Add FAB behavior) ======
-
+const chatDialog = document.getElementById('chatDialog');
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 const chatSend = document.getElementById('chatSend');
-
-// === Floating Chat Bubble toggle ===
-const fabQuickAdd = document.getElementById('fabQuickAdd');
-const chatDialog = document.getElementById('chatDialog');
-
-// helper: toggle open attribute (since <dialog> showModal is disabled)
-fabQuickAdd.addEventListener('click', () => {
-    if (chatDialog.hasAttribute('open')) {
-        chatDialog.removeAttribute('open');
-    } else {
-        chatDialog.setAttribute('open', '');
-    }
-});
-
-// close button inside chat
-chatDialog.querySelector('button[value="close"]').addEventListener('click', () => {
-    chatDialog.removeAttribute('open');
-});
-
+const fabChat = document.getElementById('fabQuickAdd');
 
 
 // simple rolling history
@@ -1021,11 +995,10 @@ function initChipsFromHash() {
         const params = new URLSearchParams(location.hash.replace(/^#/, ''));
         const t = params.get('type');
         if (t === 'white' || t === 'red' || t === '') {
-            $$('.chip', chipsEl).forEach(c =>
-                c.classList.toggle('selected', c.dataset.type === (t ?? ''))
-            );
+            $$('.chip', chipsEl).forEach(c => c.classList.toggle('selected', c.dataset.type === (t ?? '')));
         }
     } catch { }
 }
-
 initChipsFromHash();
+renderList();
+updateTabCounts();
