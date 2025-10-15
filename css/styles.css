@@ -1,30 +1,18 @@
 /* ============ THEME TOKENS ============ */
 :root {
-    /* base */
     --bg: #f6f7fb;
     --card: #ffffff;
     --text: #101315;
     --muted: #6b7280;
     --border: #e7e9ee;
-
-    /* brand accents */
     --primary: #5561f6;
-    /* refined indigo */
-    --primary-weak: color-mix(in oklab, var(--primary) 16%, white);
+    --primary-weak: color-mix(in oklab, var(--primary)16%, white);
     --danger: #ef4444;
-
-    /* depth & effects */
     --shadow-1: 0 1px 2px rgba(16, 19, 21, .06), 0 6px 16px rgba(16, 19, 21, .06);
     --shadow-2: 0 10px 30px rgba(16, 19, 21, .12), 0 2px 6px rgba(16, 19, 21, .08);
     --radius: 14px;
-
-    /* focus */
-    --ring: 0 0 0 3px color-mix(in oklab, var(--primary) 24%, transparent);
-
-    /*topbar*/
+    --ring: 0 0 0 3px color-mix(in oklab, var(--primary)24%, transparent);
     --topbar-h: 58px;
-
-    /* typography */
     --font-head: "Cormorant Garamond", serif;
     --font-sans: "Work Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -37,20 +25,20 @@
     --muted: #9aa3b2;
     --border: #222630;
     --primary: #7b87ff;
-    --primary-weak: color-mix(in oklab, var(--primary) 18%, #0b0c0f);
+    --primary-weak: color-mix(in oklab, var(--primary)18%, #0b0c0f);
     --shadow-1: 0 1px 2px rgba(0, 0, 0, .25), 0 6px 16px rgba(0, 0, 0, .25);
     --shadow-2: 0 10px 30px rgba(0, 0, 0, .35), 0 2px 6px rgba(0, 0, 0, .25);
-    --ring: 0 0 0 3px color-mix(in oklab, var(--primary) 34%, transparent);
+    --ring: 0 0 0 3px color-mix(in oklab, var(--primary)34%, transparent);
 }
 
 /* ============ RESET / BASE ============ */
 * {
-    box-sizing: border-box;
+    box-sizing: border-box
 }
 
 html,
 body {
-    height: 100%;
+    height: 100%
 }
 
 body {
@@ -71,7 +59,7 @@ body {
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    overflow: hidden;
+    overflow: hidden
 }
 
 .blob {
@@ -82,59 +70,59 @@ body {
     opacity: .28;
     border-radius: 50%;
     animation: float 28s ease-in-out infinite;
-    will-change: transform;
+    will-change: transform
 }
 
 .blob-a {
     left: -10vmax;
     top: -6vmax;
-    background: radial-gradient(circle at 30% 30%, #c9d0ff, #8ea2ff);
+    background: radial-gradient(circle at 30% 30%, #c9d0ff, #8ea2ff)
 }
 
 .blob-b {
     right: -8vmax;
     bottom: -10vmax;
     background: radial-gradient(circle at 60% 40%, #ffd1df, #ff9fb8);
-    animation-duration: 34s;
+    animation-duration: 34s
 }
 
 @keyframes float {
     0% {
-        transform: translate3d(0, 0, 0) scale(1);
+        transform: translate3d(0, 0, 0) scale(1)
     }
 
     50% {
-        transform: translate3d(2vmax, -1vmax, 0) scale(1.06);
+        transform: translate3d(2vmax, -1vmax, 0) scale(1.06)
     }
 
     100% {
-        transform: translate3d(0, 0, 0) scale(1);
+        transform: translate3d(0, 0, 0) scale(1)
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion:reduce) {
     .blob {
-        animation: none;
+        animation: none
     }
 }
 
 /* ============ TYPOGRAPHY ============ */
 h1,
 h2 {
-    font-family: var(--font-head);
+    font-family: var(--font-head)
 }
 
 h1 {
     font-weight: 700;
     font-size: clamp(1.75rem, 2vw + 1rem, 2.25rem);
-    line-height: 1.2;
+    line-height: 1.2
 }
 
 h2 {
     font-weight: 700;
     font-size: 1.5rem;
     line-height: 1.3;
-    margin: 0 0 12px;
+    margin: 0 0 12px
 }
 
 .group-title {
@@ -145,7 +133,7 @@ h2 {
     letter-spacing: .22em;
     text-transform: uppercase;
     color: var(--muted);
-    padding: 0 6px;
+    padding: 0 6px
 }
 
 legend {
@@ -155,7 +143,7 @@ legend {
     line-height: 1;
     letter-spacing: .3px;
     color: var(--muted);
-    padding: 0 6px;
+    padding: 0 6px
 }
 
 .meta,
@@ -166,10 +154,10 @@ code,
     font-family: var(--font-mono);
     font-size: 13px;
     line-height: 1.4;
-    color: var(--muted);
+    color: var(--muted)
 }
 
-/* ============ APP CHROME ============ */
+/* ============ APP CHROME (single source of truth) ============ */
 .topbar {
     position: sticky;
     top: 0;
@@ -179,11 +167,10 @@ code,
     justify-content: space-between;
     gap: 14px;
     padding: 14px 18px;
-    background: color-mix(in oklab, var(--bg) 72%, #ffffff 28%);
+    background: color-mix(in oklab, var(--bg)72%, #ffffff 28%);
     backdrop-filter: saturate(1.2) blur(6px);
     border-bottom: 1px solid var(--border);
     flex-wrap: nowrap;
-    /* keeps all items on the same row */
 }
 
 .topbar h1 {
@@ -198,45 +185,25 @@ code,
     flex: 1 1 auto;
     display: flex;
     align-items: center;
-    max-width: 600px;
+    max-width: 600px
 }
 
 .topbar-actions {
     flex: 0 0 auto;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 8px
 }
 
-/* smaller screens: let the search shrink gracefully but stay inline */
-@media (max-width: 600px) {
+@media (max-width:600px) {
     .topbar {
         gap: 8px;
-        padding: 12px;
+        padding: 12px
     }
 
     .topbar-search input {
-        min-width: 120px;
+        min-width: 120px
     }
-}
-
-.topbar h1 {
-    margin: 0;
-    font: 700 18px/1 var(--font-head);
-    letter-spacing: .2px;
-}
-
-.topbar-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.topbar-search {
-    display: flex;
-    align-items: center;
-    max-width: 520px;
-    width: 100%;
 }
 
 .topbar-search input {
@@ -244,17 +211,17 @@ code,
     padding: 10px 12px;
     border-radius: 12px;
     border: 1px solid var(--border);
-    background: color-mix(in oklab, var(--card) 92%, transparent);
+    background: color-mix(in oklab, var(--card)92%, transparent);
     color: var(--text);
 }
 
 .topbar-search input:focus {
     border-color: color-mix(in oklab, var(--primary)60%, var(--border));
-    box-shadow: var(--ring);
+    box-shadow: var(--ring)
 }
 
 .menu {
-    display: none !important;
+    display: none !important
 }
 
 /* Tabs with badges */
@@ -266,7 +233,7 @@ code,
     gap: 8px;
     padding: 10px 14px;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(0deg, color-mix(in oklab, var(--bg) 85%, #fff 15%), var(--bg));
+    background: linear-gradient(0deg, color-mix(in oklab, var(--bg)85%, #fff 15%), var(--bg));
 }
 
 .tab {
@@ -274,7 +241,7 @@ code,
     padding: 9px 14px;
     border: 1px solid var(--border);
     border-radius: 999px;
-    background: color-mix(in oklab, var(--card) 86%, var(--primary-weak) 14%);
+    background: color-mix(in oklab, var(--card)86%, var(--primary-weak)14%);
     cursor: pointer;
     color: var(--text);
     transition: transform .12s ease, box-shadow .2s ease;
@@ -282,13 +249,13 @@ code,
 
 .tab:hover {
     transform: translateY(-1px);
-    box-shadow: var(--shadow-1);
+    box-shadow: var(--shadow-1)
 }
 
 .tab.active {
-    border-color: color-mix(in oklab, var(--primary) 60%, var(--border));
-    background: color-mix(in oklab, var(--card) 70%, var(--primary-weak) 30%);
-    box-shadow: var(--shadow-1);
+    border-color: color-mix(in oklab, var(--primary)60%, var(--border));
+    background: color-mix(in oklab, var(--card)70%, var(--primary-weak)30%);
+    box-shadow: var(--shadow-1)
 }
 
 .badge {
@@ -297,9 +264,9 @@ code,
     padding: 0 8px;
     border-radius: 999px;
     font: 600 12px/20px var(--font-head);
-    background: color-mix(in oklab, var(--primary) 16%, var(--card));
+    background: color-mix(in oklab, var(--primary)16%, var(--card));
     border: 1px solid var(--border);
-    color: var(--text);
+    color: var(--text)
 }
 
 .tabpanel {
@@ -308,61 +275,61 @@ code,
     max-width: 1100px;
     margin: 0 auto;
     position: relative;
-    z-index: 1;
+    z-index: 1
 }
 
 .tabpanel.active {
-    display: block;
+    display: block
 }
 
 /* ============ CARDS & LAYOUT ============ */
 .card {
-    background: color-mix(in oklab, var(--card) 92%, var(--primary-weak) 8%);
+    background: color-mix(in oklab, var(--card)92%, var(--primary-weak)8%);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 18px;
-    box-shadow: var(--shadow-1);
+    box-shadow: var(--shadow-1)
 }
 
 .grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(280px, 1fr));
-    gap: 16px 20px;
+    gap: 16px 20px
 }
 
 .grid .full {
-    grid-column: 1 / -1;
+    grid-column: 1 / -1
 }
 
 .grid .grow {
     flex: 1;
-    min-width: 160px;
+    min-width: 160px
 }
 
 /* Grouped sections */
 .group {
-    border: 1px solid color-mix(in oklab, var(--border) 80%, var(--primary-weak) 20%);
+    border: 1px solid color-mix(in oklab, var(--border)80%, var(--primary-weak)20%);
     border-radius: 14px;
     padding: 14px;
-    background: color-mix(in oklab, var(--card) 96%, transparent);
+    background: color-mix(in oklab, var(--card)96%, transparent)
 }
 
 .group-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(280px, 1fr));
-    gap: 14px 16px;
+    gap: 14px 16px
 }
 
 .group fieldset {
-    border: 1px dashed color-mix(in oklab, var(--border) 70%, var(--primary-weak) 30%);
+    border: 1px dashed color-mix(in oklab, var(--border)70%, var(--primary-weak)30%);
     padding: 12px;
     border-radius: 12px;
-    transition: border-color .2s, background .2s, box-shadow .2s;
+    transition: border-color .2s, background .2s, box-shadow .2s
 }
 
 .group fieldset:hover {
-    border-color: color-mix(in oklab, var(--border) 40%, var(--primary) 60%);
-    box-shadow: var(--shadow-1);
+    border-color: color-mix(in oklab, var(--border)40%, var(--primary)60%);
+    box-shadow: var(--shadow-1)
 }
 
 /* labels & controls */
@@ -370,7 +337,7 @@ label {
     display: inline-flex;
     gap: 8px;
     align-items: center;
-    margin: 6px 12px 0 0;
+    margin: 6px 12px 0 0
 }
 
 /* inputs */
@@ -382,7 +349,7 @@ select {
     padding: 11px 12px;
     border: 1px solid var(--border);
     border-radius: 12px;
-    background: color-mix(in oklab, var(--card) 92%, transparent);
+    background: color-mix(in oklab, var(--card)92%, transparent);
     color: var(--text);
     transition: border-color .2s, box-shadow .2s, background .2s;
     outline: none;
@@ -392,13 +359,13 @@ input[type="text"]:focus,
 input[type="search"]:focus,
 textarea:focus,
 select:focus {
-    border-color: color-mix(in oklab, var(--primary) 60%, var(--border));
+    border-color: color-mix(in oklab, var(--primary)60%, var(--border));
     box-shadow: var(--ring);
-    background: color-mix(in oklab, var(--card) 88%, var(--primary-weak) 12%);
+    background: color-mix(in oklab, var(--card)88%, var(--primary-weak)12%);
 }
 
 textarea {
-    resize: vertical;
+    resize: vertical
 }
 
 /* custom radios/checkboxes */
@@ -412,23 +379,23 @@ input[type="checkbox"] {
     display: inline-block;
     position: relative;
     transition: border-color .2s, background .2s, transform .12s;
-    background: color-mix(in oklab, var(--card) 92%, transparent);
+    background: color-mix(in oklab, var(--card)92%, transparent);
 }
 
 input[type="radio"] {
-    border-radius: 999px;
+    border-radius: 999px
 }
 
 input[type="radio"]:checked,
 input[type="checkbox"]:checked {
     background: var(--primary);
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 25%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary)25%, transparent)
 }
 
 input[type="radio"]:active,
 input[type="checkbox"]:active {
-    transform: scale(.96);
+    transform: scale(.96)
 }
 
 /* buttons */
@@ -447,39 +414,39 @@ button,
 button:hover,
 .file-btn:hover {
     transform: translateY(-1px);
-    box-shadow: var(--shadow-1);
+    box-shadow: var(--shadow-1)
 }
 
 button:focus-visible,
 .file-btn:focus-within {
-    box-shadow: var(--ring);
+    box-shadow: var(--ring)
 }
 
 button.primary {
     background: var(--primary);
     border-color: var(--primary);
-    color: #fff;
+    color: #fff
 }
 
 button.primary:hover {
-    box-shadow: var(--shadow-2);
+    box-shadow: var(--shadow-2)
 }
 
 button.ghost {
-    background: color-mix(in oklab, var(--card) 70%, transparent);
+    background: color-mix(in oklab, var(--card)70%, transparent)
 }
 
 button.danger {
     background: var(--danger);
     border-color: var(--danger);
-    color: #fff;
+    color: #fff
 }
 
 /* groups */
 .actions {
     display: flex;
     gap: 10px;
-    margin-top: 14px;
+    margin-top: 14px
 }
 
 /* toolbar + list */
@@ -488,37 +455,37 @@ button.danger {
     gap: 10px;
     align-items: center;
     margin-bottom: 12px;
-    flex-wrap: wrap;
+    flex-wrap: wrap
 }
 
 .spacer {
-    flex: 1;
+    flex: 1
 }
 
 /* chips */
 .chips {
     display: inline-flex;
-    gap: 8px;
+    gap: 8px
 }
 
 .chip {
     padding: 8px 12px;
     border-radius: 999px;
     border: 1px solid var(--border);
-    background: color-mix(in oklab, var(--card) 86%, var(--primary-weak) 14%);
+    background: color-mix(in oklab, var(--card)86%, var(--primary-weak)14%)
 }
 
 .chip.selected {
-    border-color: color-mix(in oklab, var(--primary) 60%, var(--border));
-    background: color-mix(in oklab, var(--card) 70%, var(--primary-weak) 30%);
-    box-shadow: var(--shadow-1);
+    border-color: color-mix(in oklab, var(--primary)60%, var(--border));
+    background: color-mix(in oklab, var(--card)70%, var(--primary-weak)30%);
+    box-shadow: var(--shadow-1)
 }
 
 /* list with inline expand */
 .list {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 0
 }
 
 .list li {
@@ -528,13 +495,13 @@ button.danger {
     background: var(--card);
     margin-bottom: 10px;
     box-shadow: var(--shadow-1);
-    transition: transform .12s, box-shadow .2s, border-color .2s, background .2s;
+    transition: transform .12s, box-shadow .2s, border-color .2s, background .2s
 }
 
 .list li:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-2);
-    border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
+    border-color: color-mix(in oklab, var(--primary)55%, var(--border))
 }
 
 .row {
@@ -542,27 +509,27 @@ button.danger {
     grid-template-columns: 1fr auto;
     align-items: center;
     padding: 12px 14px;
-    cursor: pointer;
+    cursor: pointer
 }
 
 .row .title {
-    font-weight: 600;
+    font-weight: 600
 }
 
 .row .meta {
     color: var(--muted);
-    font: 13px/1.4 var(--font-sans);
+    font: 13px/1.4 var(--font-sans)
 }
 
 .row .chev {
     padding-left: 12px;
     color: var(--muted);
-    font: 600 18px/1 var(--font-head);
+    font: 600 18px/1 var(--font-head)
 }
 
 .row-actions {
     display: flex;
-    gap: 8px;
+    gap: 8px
 }
 
 .row-actions .iconbtn {
@@ -571,16 +538,16 @@ button.danger {
     height: 36px;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: center
 }
 
 .row-expand {
     display: none;
-    padding: 0 14px 12px;
+    padding: 0 14px 12px
 }
 
 .list li.expanded .row-expand {
-    display: block;
+    display: block
 }
 
 .preview {
@@ -588,11 +555,11 @@ button.danger {
     grid-template-columns: 220px 1fr;
     gap: 8px 16px;
     align-items: start;
-    padding-top: 8px;
+    padding-top: 8px
 }
 
 .preview .kv {
-    display: contents;
+    display: contents
 }
 
 .k {
@@ -600,18 +567,18 @@ button.danger {
     font-family: var(--font-head);
     font-weight: 600;
     font-size: 13px;
-    letter-spacing: .2px;
+    letter-spacing: .2px
 }
 
 .v {
-    white-space: pre-wrap;
+    white-space: pre-wrap
 }
 
 .thumb {
     max-width: 180px;
     border: 1px solid var(--border);
     border-radius: 12px;
-    margin-top: 6px;
+    margin-top: 6px
 }
 
 /* dialog (detail view) */
@@ -620,21 +587,21 @@ dialog {
     padding: 0;
     border-radius: 16px;
     width: min(760px, 92vw);
-    background: color-mix(in oklab, var(--card) 90%, var(--primary-weak) 10%);
+    background: color-mix(in oklab, var(--card)90%, var(--primary-weak)10%);
     color: var(--text);
-    box-shadow: var(--shadow-2);
+    box-shadow: var(--shadow-2)
 }
 
 dialog::backdrop {
     background: rgba(0, 0, 0, .45);
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px)
 }
 
 #detailContent {
     padding: 18px;
     max-height: 72vh;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: contain
 }
 
 .dialog-actions {
@@ -642,13 +609,13 @@ dialog::backdrop {
     gap: 8px;
     justify-content: flex-end;
     padding: 12px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border)
 }
 
 .kv {
     display: grid;
     grid-template-columns: 220px 1fr;
-    gap: 8px 16px;
+    gap: 8px 16px
 }
 
 /* fixed selector (typo) */
@@ -657,147 +624,164 @@ dialog::backdrop {
     max-width: 100%;
     border: 1px solid var(--border);
     border-radius: 12px;
-    margin-top: 10px;
+    margin-top: 10px
 }
 
-/* Quick Add dialog */
+/* Quick Add dialog (still present but unused as FAB) */
 .quickadd h3 {
-    margin: 0 0 8px;
+    margin: 0 0 8px
 }
 
 .quickadd .row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 12px
 }
 
 .selectlike select {
-    width: 100%;
+    width: 100%
 }
 
-/* FAB */
+/* FAB (chat trigger) */
 .fab {
     position: fixed;
-    right: 16px;
-    bottom: 16px;
-    z-index: 5;
+    right: 24px;
+    bottom: 24px;
+    z-index: 15;
     width: 56px;
     height: 56px;
     border-radius: 50%;
     border: 1px solid var(--border);
     background: var(--primary);
     color: #fff;
-    font-size: 24px;
+    font-size: 22px;
     line-height: 0;
     box-shadow: var(--shadow-2);
+    transition: transform .2s ease, background .2s ease;
 }
 
 .fab:hover {
-    transform: translateY(-1px);
+    transform: scale(1.06);
+    background: color-mix(in oklab, var(--primary)80%, white 15%)
 }
 
-/* Make "other:" inputs span full width and stack vertically */
+/* Make "other:" inputs span full width */
 label.other-input {
     display: flex;
     flex-direction: row;
-    align-items: flex-start;
-    margin-top: 12px;
     align-items: center;
-    margin: 0 10rem 0 10rem;
+    margin: 0 10rem
 }
 
 /* responsive */
-@media (max-width: 900px) {
-    .topbar {
-        grid-template-columns: 1fr auto;
-        grid-auto-rows: auto;
-    }
-
-    .topbar-search {
-        grid-column: 1 / -1;
-    }
-}
-
-@media (max-width: 760px) {
+@media (max-width:760px) {
 
     .grid,
     .group-grid,
     .kv,
     .preview {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr
     }
 
     .quickadd .row {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr
     }
 }
 
-/* ===== Likes (heart) ===== */
+/* Likes */
 .iconbtn.like {
     position: relative;
     font-size: 16px;
-    line-height: 1;
+    line-height: 1
 }
 
 .iconbtn.like[aria-pressed="true"] {
-    background: color-mix(in oklab, var(--primary) 20%, var(--card));
-    border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
-    box-shadow: var(--shadow-1);
+    background: color-mix(in oklab, var(--primary)20%, var(--card));
+    border-color: color-mix(in oklab, var(--primary)55%, var(--border));
+    box-shadow: var(--shadow-1)
 }
 
 .iconbtn.like .like-count {
     font: 600 11px/1 var(--font-sans);
     color: var(--muted);
-    margin-left: 6px;
+    margin-left: 6px
 }
 
-/* fit 4th icon nicely */
 .row-actions .iconbtn {
     width: 34px;
-    height: 34px;
+    height: 34px
 }
 
 .row-actions {
-    gap: 6px;
+    gap: 6px
 }
 
 /* ---------- Public page thumbnail sizing (scoped) ---------- */
 #publicLogList .preview {
     grid-template-columns: 140px 1fr;
-    /* narrower, consistent left column */
-    align-items: center;
-    /* centers image nicely */
+    align-items: center
 }
 
 #publicLogList .thumb {
     display: block;
     width: 120px;
-    /* fixed width so all cards align */
     height: 160px;
-    /* fixed height for uniform rows */
     object-fit: contain;
-    /* keep bottle proportions */
     background: var(--card);
-    /* optional: neutral backdrop */
     border-radius: 12px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border)
 }
 
-/* Tweak for small screens */
-@media (max-width: 760px) {
+@media (max-width:760px) {
     #publicLogList .preview {
-        grid-template-columns: 100px 1fr;
+        grid-template-columns: 100px 1fr
     }
 
     #publicLogList .thumb {
         width: 90px;
-        height: 120px;
+        height: 120px
     }
 }
 
-/* ===== AI Chat UI ===== */
-.chat {
+/* ============ FLOATING CHAT WIDGET (clean) ============ */
+#chatDialog {
+    position: fixed;
+    bottom: 90px;
+    right: 24px;
+    width: 360px;
+    max-height: 70vh;
+    margin: 0;
     padding: 0;
+    border: none;
+    border-radius: var(--radius);
+    background: color-mix(in oklab, var(--card)94%, var(--primary-weak)6%);
+    box-shadow: var(--shadow-2);
+    overflow: hidden;
+    display: none;
+    z-index: 20;
+    transform-origin: bottom right;
+    animation: chatPop .25s ease;
+}
+
+#chatDialog[open] {
+    display: flex;
+    flex-direction: column
+}
+
+@keyframes chatPop {
+    from {
+        opacity: 0;
+        transform: scale(.85) translateY(10px)
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0)
+    }
+}
+
+.chat {
+    padding: 0
 }
 
 .chat-header {
@@ -805,94 +789,76 @@ label.other-input {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 14px 16px;
+    padding: 10px 14px;
     border-bottom: 1px solid var(--border);
-    background: color-mix(in oklab, var(--card) 92%, var(--primary-weak) 8%);
-    border-radius: 16px 16px 0 0;
+    background: color-mix(in oklab, var(--card)92%, var(--primary-weak)8%);
 }
 
 .chat-title {
     display: flex;
     align-items: baseline;
-    gap: 8px;
+    gap: 6px;
+    font: 600 14px/1 var(--font-head);
+    letter-spacing: .2px
 }
 
-.chat-tools {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-#geminiKey {
-    width: 280px;
-    padding: 8px 10px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: color-mix(in oklab, var(--card) 92%, transparent);
-    font: 13px/1.4 var(--font-mono);
+.chat-title .meta {
+    font-size: 11px;
+    color: var(--muted)
 }
 
 .chat-messages {
-    max-height: min(60vh, 540px);
-    overflow: auto;
-    padding: 14px 16px;
-    background: color-mix(in oklab, var(--card) 90%, var(--primary-weak) 10%);
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: color-mix(in oklab, var(--card)96%, var(--primary-weak)4%);
 }
 
 .msg {
     display: inline-block;
     max-width: 80%;
     padding: 10px 12px;
-    margin: 6px 0;
     border-radius: 14px;
     border: 1px solid var(--border);
-    background: var(--card);
     white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 14px;
+    line-height: 1.5
 }
 
 .msg.user {
-    background: color-mix(in oklab, var(--primary) 10%, var(--card));
-    border-color: color-mix(in oklab, var(--primary) 40%, var(--border));
+    align-self: flex-end;
+    background: color-mix(in oklab, var(--primary)12%, var(--card));
+    border-color: color-mix(in oklab, var(--primary)40%, var(--border))
 }
 
 .msg.bot {
-    background: color-mix(in oklab, var(--card) 92%, var(--primary-weak) 8%);
-}
-
-.bubble {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-}
-
-.bubble .who {
-    font: 600 11px/1 var(--font-sans);
-    color: var(--muted);
-    width: 56px;
-    flex: 0 0 56px;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-}
-
-.bubble .msg {
-    flex: 1;
+    align-self: flex-start;
+    background: color-mix(in oklab, var(--card)92%, var(--primary-weak)8%)
 }
 
 .chat-input {
     display: grid;
     grid-template-columns: 1fr auto;
     gap: 10px;
-    padding: 12px 16px 16px;
+    padding: 10px 12px;
     border-top: 1px solid var(--border);
-    border-radius: 0 0 16px 16px;
-    background: color-mix(in oklab, var(--card) 94%, transparent);
+    background: color-mix(in oklab, var(--card)94%, transparent);
 }
 
 #chatInput {
-    resize: vertical;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    background: color-mix(in oklab, var(--card)94%, transparent);
+    resize: none
 }
 
-/* Make the FAB a chat trigger visually */
-.fab {
-    font-size: 22px;
+#chatSend {
+    padding: 8px 12px;
+    font-size: 14px
 }
